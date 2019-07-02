@@ -38,36 +38,18 @@ directori.arrel[file.exists(directori.arrel)] %>%
 ####    DIRECTORI DE TREBALL              
 #### setwd en directori de treball 
 
-"CIBERDEM/GEDAPS/PRECAV/DADESSIDIAP2" %>% 
-  directori_treball(directori.arrel)
-
 # 0. Inicialització de parametres  -----------------------------
 
 # N test mostra a seleccionar  (Nmostra=Inf)
 
 # Nmostra=Inf  # Seria tota la mostra
-Nmostra=100000
-
-# - AGREGADOR DE CAS = EV_CARD
-AGR_CAS<-"ECV_TER"
-# 
-
-"dades/preparades" %>% here::here("BD_PRECAV_test3.rds")
-
-# fitxersortida
-fitxersortida<-"dades/preparades" %>% here::here("BD_PRECAV_test3.rds")
+Nmostra=Inf
 
 # fitxer conductor cataleg 
-fitxer_conductor_cataleg<-"dades" %>% here::here("cataleg_4.6.19_arreglat.xls")
+fitxer_conductor_cataleg<-"dades" %>% here::here("cataleg_precav.xls")
 
 # fitxer conductor variables
 fitxer_conductor_variables<-"dades" %>% here::here("variables_precav.xls")
-
-# Nombre de controls per cas
-num_controls<-4
-
-# Llista d'aparellamenta
-llistaPS=c("sexe","any_naix","idup")
 
 # 1. Lectura de Fitxers  --------------------------
 
@@ -97,45 +79,80 @@ llistaPS=c("sexe","any_naix","idup")
 # library("xlsx")
 # write.xlsx(CATALEG,file="cataleg.xlsx")
 
+gc()
 
 CATALEG<-readxl::read_excel(fitxer_conductor_cataleg,col_types = "text")
 
-
 LLEGIR.PACIENTS<-function(n=Nmostra) {
-  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_pacients_20190517_101801.rds")) %>% as_tibble() %>% head(n)}
+  readRDS("./dades/sidiap_test/pacients_mostra.rds") %>% as_tibble() %>% head(n)}
 
 LLEGIR.PROBLEMES<-function(n=Nmostra) {
-  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_problemes_20181123_172533.rds"))%>% as_tibble() %>% head(n)}
+  readRDS("./dades/sidiap_test/PROBLEMES_mostra.rds")%>% as_tibble() %>% head(n)}
 
 LLEGIR.CMBDH<-function(n=Nmostra) {
-  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_cmbd_dx_20181123_172533.rds"))%>% as_tibble() %>% head(n)}
+  readRDS("./dades/sidiap_test/CMBDH_mostra.rds") %>% as_tibble() %>% head(n)}
 
 LLEGIR.padris<-function(n=Nmostra) {
-  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_cmbd_dx_padris_20181123_172533.rds"))%>% as_tibble() %>% head(n)}
+  readRDS("./dades/sidiap_test/CMBDH_PROC_mostra.rds") %>% as_tibble() %>% head(n)}
 
 LLEGIR.PROC<-function(n=Nmostra) {
-  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_cmbd_px_padris_20181123_172533.rds"))%>% as_tibble() %>% head(n)}
+  readRDS("./dades/sidiap_test/CMBDH.padris_mostra.rds") %>% as_tibble() %>% head(n)}
 
 LLEGIR.TABAC<-function(n=Nmostra) {
-  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_tabaquisme_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
-
-LLEGIR.DERIVACIONS<-function(n=Nmostra) {
-  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_derivacions_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
+  readRDS("./dades/sidiap_test/TABAC_mostra.rds") %>% as_tibble() %>% head(n) }
 
 LLEGIR.FX.FACTURATS<-function(n=Nmostra) {
-  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_facturacions_20190517_101801.rds"))%>% as_tibble() %>% head(n) }
+  readRDS("./dades/sidiap_test/FX.FACTURATS_mostra.rds")%>% as_tibble() %>% head(n) }
 
 LLEGIR.FX.PRESCRITS<-function(n=Nmostra) {
-  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_prescripcions_20190517_101801.rds"))%>% as_tibble() %>% head(n) }
+  readRDS("./dades/sidiap_test/FX.PRESCRITS_mostra.rds")%>% as_tibble() %>% head(n) }
 
 LLEGIR.VARIABLES<-function(n=Nmostra) {
-  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_variables_analitiques_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
+  readRDS("./dades/sidiap_test/VARIABLES_mostra.rds")%>% as_tibble() %>% head(n) }
 
 LLEGIR.CLINIQUES<-function(n=Nmostra) {
-  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_variables_cliniques_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
+  readRDS("./dades/sidiap_test/CLINIQUES_mostra.rds")%>% as_tibble() %>% head(n) }
 
 LLEGIR.VISITES<-function(n=Nmostra) {
-  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_visites_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
+  readRDS("./dades/sidiap_test/VISITES_mostra.rds")%>% as_tibble() %>% head(n) }
+
+##  Llegir tota la població ------------------
+
+# LLEGIR.PACIENTS<-function(n=Nmostra) {
+#   readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_pacients_20190517_101801.rds")) %>% as_tibble() %>% head(n)}
+# 
+# LLEGIR.PROBLEMES<-function(n=Nmostra) {
+#   readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_problemes_20181123_172533.rds"))%>% as_tibble() %>% head(n)}
+# 
+# LLEGIR.CMBDH<-function(n=Nmostra) {
+#   readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_cmbd_dx_20181123_172533.rds"))%>% as_tibble() %>% head(n)}
+# 
+# LLEGIR.padris<-function(n=Nmostra) {
+#   readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_cmbd_dx_padris_20181123_172533.rds"))%>% as_tibble() %>% head(n)}
+# 
+# LLEGIR.PROC<-function(n=Nmostra) {
+#   readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_cmbd_px_padris_20181123_172533.rds"))%>% as_tibble() %>% head(n)}
+# 
+# LLEGIR.TABAC<-function(n=Nmostra) {
+#   readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_tabaquisme_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
+# 
+# LLEGIR.DERIVACIONS<-function(n=Nmostra) {
+#   readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_derivacions_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
+# 
+# LLEGIR.FX.FACTURATS<-function(n=Nmostra) {
+#   readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_facturacions_20190517_101801.rds"))%>% as_tibble() %>% head(n) }
+# 
+# LLEGIR.FX.PRESCRITS<-function(n=Nmostra) {
+#   readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_prescripcions_20190517_101801.rds"))%>% as_tibble() %>% head(n) }
+# 
+# LLEGIR.VARIABLES<-function(n=Nmostra) {
+#   readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_variables_analitiques_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
+# 
+# LLEGIR.CLINIQUES<-function(n=Nmostra) {
+#   readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_variables_cliniques_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
+# 
+# LLEGIR.VISITES<-function(n=Nmostra) {
+#   readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_visites_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
 
 ##  Llegir 
 
@@ -188,30 +205,71 @@ rm(CMBDH.padris)
 
 #### Fusiono agregador (+agr) 
 CASOS_HTA<-PROBLEMES_total %>% 
-  agregar_problemes_agr(bd.dindex="20161231",agregador ="HTA_O",dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),prefix="",camp_agregador="agr")  # agrego problemes de salut
-  
-### Afegeixo a Cohort (PACIENTS) + Casos amb la data d'esdeveniment
+  agregar_problemes_agr(bd.dindex="20161231",agregador ="HTA",dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),prefix="",camp_agregador="agr")  # agrego problemes de salut
 
+####
+CASOS_E11<-PROBLEMES_total %>% 
+  agregar_problemes_agr(bd.dindex="20161231",agregador ="E11",dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),prefix="",camp_agregador="agr")  # agrego problemes de salut
+
+
+
+### Afegeixo a Cohort (PACIENTS) + Casos amb la data d'esdeveniment
 PACIENTS<-PACIENTS %>% 
   dplyr::left_join(CASOS_HTA, by="idp") %>% 
+  dplyr::left_join(CASOS_E11, by="idp")%>% 
   as_tibble()
+
+
+PACIENTS<-PACIENTS %>% filter(E11>0 | HTA>0)
+
+dt_index<-PACIENTS %>% mutate(dtindex=as.numeric(lubridate::ymd(20161231))) %>% select(idp,dtindex)
 
 
 # Agregar Farmacs Facturació ---------------------------
 FX.FACTURATS<-Nmostra %>% LLEGIR.FX.FACTURATS()
-farmacs_dispensats<-agregar_facturacio(dt=FX.FACTURATS,prefix = "FD.",bd.dindex ="20161231",finestra.dies=c(-365,0),dt.agregadors=CATALEG,camp_agregador="agr")
+
+# SEleccionar només FX.FACTURATS QUE ESTAN EN dt_index / pacients
+
+# FX.FACTURATS<-FX.FACTURATS %>% inner_join(select(dt_index,idp),by="idp")
+
+# Seleccionjo només HIPOTENSORS
+FX.FACTURATS<-FX.FACTURATS %>% filter(agr=="HIPOTENS")
+farmacs_dispensats<-agregar_facturacio(dt=FX.FACTURATS,prefix = "FD.",bd.dindex ="20161231",finestra.dies=c(-365,0),dt.agregadors=CATALEG,camp_agregador="antiHTA")
 
 # Agregar Farmacs Prescrits  ---------------------------
 FX.PRESCRITS<-Nmostra %>% LLEGIR.FX.PRESCRITS()
-farmacs_prescrits<-agregar_prescripcions(dt=FX.PRESCRITS,bd.dindex="20161231",dt.agregadors=CATALEG,prefix="FP.",finestra.dies = c(-45,+45),camp_agregador="agr")
+FX.PRESCRITS<-FX.PRESCRITS %>% filter(agr=="HIPOTENS")
 
+farmacs_prescrits<-agregar_prescripcions(dt=FX.PRESCRITS,bd.dindex="20161231",dt.agregadors=CATALEG,prefix="FP.",finestra.dies = c(-1,+1),camp_agregador="antiHTA")
 
 # Ara fusionar pacients amb faramcs ------------------
+PACIENTS<-PACIENTS %>% 
+  left_join(farmacs_dispensats,by="idp") %>% 
+  left_join(farmacs_prescrits,by="idp") 
+  
+# Categoritzar segons antecedents de HTA , DM i FX FD -------
+PACIENTS<-PACIENTS %>% mutate(HTA=lubridate::as_date(HTA), 
+                    E11=lubridate::as_date(E11)) %>% filter (HTA>0 | E11>0) %>% 
+  mutate(HTA=if_else(HTA>0,"Si","No"),DM=if_else(E11>0,"Si","No")) %>% 
+  mutate(HTA=if_else(is.na(HTA),"No",HTA),DM=if_else(is.na(DM),"No","Si"))
+
+
+
+
+dades <-PACIENTS %>% mutate_at(vars(starts_with("FP")), 
+                               ~if_else(is.na(.) | .== 0,"NO","SI")) 
+
+dades <-dades %>% mutate_at(vars(starts_with("FD.")), 
+                               ~if_else(is.na(.) | .== 0,"NO","SI")) 
+
+
 
 
 # Despres fer una descriptiva --------------------
 
+descrTable(HTA~FD.C02_ALT+FD.C08_CAL+FD.C09_IECA+FP.C02_ALT+FP.C08_CAL+FP.C09_IECA,data=dades,show.n = T,show.p.overall = F)
 
+descrTable(DM~FD.C02_ALT+FD.C08_CAL+FD.C09_IECA+FP.C02_ALT+FP.C08_CAL+FP.C09_IECA,data=dades,show.n = T,show.p.overall = F)
 
 
 
