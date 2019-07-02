@@ -34,3 +34,16 @@ vignettes/*.pdf
 
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
+.Rproj.user
+
+# Informes html
+*.html
+
+# Directoris a ignorar
+/dades
+/despeses
+/documents
+/output
+/temps
+/sintaxis/temp
+
