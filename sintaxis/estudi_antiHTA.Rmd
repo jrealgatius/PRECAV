@@ -265,9 +265,7 @@ FX.FACTURATS<-Nmostra %>% LLEGIR.FX.FACTURATS()
 # FX.FACTURATS<-FX.FACTURATS %>% inner_join(select(dt_index,idp),by="idp")
 
 # Seleccionjo només HIPOTENSORS
-FX.FACTURATS<-FX.FACTURATS %>% filter(agr=="HIPOTENS")
-
-FX.FACTURATS
+FX.FACTURATS<-FX.FACTURATS %>% filter(agr=="HIPOTENS" | agr=="ANTIDIAB")
 
 farmacs_dispensats<-agregar_facturacio(dt=FX.FACTURATS,prefix = "FD.",bd.dindex ="20161231",finestra.dies=c(-365,0),dt.agregadors=CATALEG,camp_agregador="antiHTA")
 
@@ -276,14 +274,19 @@ farmacs_dispensats_tot<-agregar_facturacio(dt=FX.FACTURATS,prefix = "FD.",bd.din
 
 # Agregar Farmacs Prescrits  ---------------------------
 FX.PRESCRITS<-Nmostra %>% LLEGIR.FX.PRESCRITS()
-FX.PRESCRITS<-FX.PRESCRITS %>% filter(agr=="HIPOTENS")
+FX.PRESCRITS<-FX.PRESCRITS %>% filter(agr=="HIPOTENS" | agr=="ANTIDIAB")
 
 farmacs_prescrits<-agregar_prescripcions(dt=FX.PRESCRITS,bd.dindex="20161231",dt.agregadors=CATALEG,prefix="FP.",finestra.dies = c(-1,+1),camp_agregador="antiHTA")
+
+farmacs_prescrits_tot<-agregar_prescripcions(dt=FX.PRESCRITS,bd.dindex="20161231",dt.agregadors=CATALEG,prefix="FP.",finestra.dies = c(-1,+1),camp_agregador="agr")
+
 
 # Ara fusionar pacients amb faramcs ------------------
 PACIENTS<-PACIENTS %>% 
   left_join(farmacs_dispensats,by="idp") %>% 
-  left_join(farmacs_prescrits,by="idp") 
+  left_join(farmacs_dispensats_tot,by="idp") %>% 
+  left_join(farmacs_prescrits,by="idp") %>% 
+  left_join(farmacs_prescrits_tot,by="idp")  
 
 
 ```
@@ -309,10 +312,18 @@ dades <-dades %>% mutate_at(vars(starts_with("FD.")),
   
 ```{r descriptiva}
 
+# Descriptiu antiHTA
 
-descrTable(HTA~FD.C02_ALT+FD.C08_CAL+FD.C09_IECA+FP.C02_ALT+FP.C08_CAL+FP.C09_IECA,data=dades,show.n = T,show.p.overall = F)
+descrTable(HTA~FD.HIPOTENS+FD.C02_ALT+FD.C08_CAL+FD.C09_IECA+FP.C02_ALT+FP.C08_CAL+FP.C09_IECA,data=dades,show.n = T,show.p.overall = F)
 
-descrTable(DM~FD.C02_ALT+FD.C08_CAL+FD.C09_IECA+FP.C02_ALT+FP.C08_CAL+FP.C09_IECA,data=dades,show.n = T,show.p.overall = F)
+descrTable(DM~FD.HIPOTENS+FD.C02_ALT+FD.C08_CAL+FD.C09_IECA+FP.C02_ALT+FP.C08_CAL+FP.C09_IECA,data=dades,show.n = T,show.p.overall = F)
+
+# Descriptiu ANTIDM
+
+descrTable(HTA~FP.ANTIDIAB+FD.ANTIDIAB+FD.HIPOTENS,data=dades,show.n = T,show.p.overall = F)
+
+descrTable(DM~FP.ANTIDIAB+FD.ANTIDIAB+FD.HIPOTENS,data=dades,show.n = T,show.p.overall = F)
+
 
 
 
