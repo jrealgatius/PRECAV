@@ -1,3 +1,17 @@
+---
+title: 'PRECAV: Estudi de % anti HTA en població SIDIAP per any'
+author: "Jordi Real"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  word_document: default
+---
+
+
+
+
 ### Estudi d'anti HTA ######
 
 
@@ -56,6 +70,10 @@ fitxer_conductor_cataleg<-"dades" %>% here::here("cataleg_precav.xls")
 
 # fitxer conductor variables
 fitxer_conductor_variables<-"dades" %>% here::here("variables_precav.xls")
+
+
+
+
 
 ```
 
@@ -232,18 +250,22 @@ rm(CMBDH.padris)
 #    IDENTIFICACIÓ DE CASOS          
 # Identificació de casos i data index  --------
 
-# Agrego problemes amb límit data máxima (31/12/2016) O sigui dels diagnostics agafo la primera data de cada problema de salut
+# Agrego problemes amb límit data tall (31/12/2016) O sigui dels diagnostics agafo la primera data de cada problema de salut
 
 
 ```{r agregar_fusionar}
 
+data_index<-"20161231"
+
+grup_atc="IECA"
+
 #### Fusiono agregador (+agr) 
 CASOS_HTA<-PROBLEMES_total %>% 
-  agregar_problemes_agr(bd.dindex="20161231",agregador ="HTA",dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),prefix="",camp_agregador="agr")  # agrego problemes de salut
+  agregar_problemes_agr(bd.dindex=data_index,agregador ="HTA",dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),prefix="",camp_agregador="agr")  # agrego problemes de salut
 
 ####
 CASOS_E11<-PROBLEMES_total %>% 
-  agregar_problemes_agr(bd.dindex="20161231",agregador ="E11",dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),prefix="",camp_agregador="agr")  # agrego problemes de salut
+  agregar_problemes_agr(bd.dindex=data_index,agregador ="E11",dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),prefix="",camp_agregador="agr")  # agrego problemes de salut
 
 
 ### Afegeixo a Cohort (PACIENTS) + Casos amb la data d'esdeveniment
@@ -267,19 +289,18 @@ FX.FACTURATS<-Nmostra %>% LLEGIR.FX.FACTURATS()
 # Seleccionjo només HIPOTENSORS
 FX.FACTURATS<-FX.FACTURATS %>% filter(agr=="HIPOTENS" | agr=="ANTIDIAB")
 
-farmacs_dispensats<-agregar_facturacio(dt=FX.FACTURATS,prefix = "FD.",bd.dindex ="20161231",finestra.dies=c(-365,0),dt.agregadors=CATALEG,camp_agregador="antiHTA")
+farmacs_dispensats<-agregar_facturacio(dt=FX.FACTURATS,prefix = "FD.",bd.dindex =data_index,finestra.dies=c(-365,0),dt.agregadors=CATALEG,camp_agregador=grup_atc)
 
-farmacs_dispensats_tot<-agregar_facturacio(dt=FX.FACTURATS,prefix = "FD.",bd.dindex ="20161231",finestra.dies=c(-365,0),dt.agregadors=CATALEG,camp_agregador="agr")
+farmacs_dispensats_tot<-agregar_facturacio(dt=FX.FACTURATS,prefix = "FD.",bd.dindex =data_index,finestra.dies=c(-365,0),dt.agregadors=CATALEG,camp_agregador="agr")
 
 
 # Agregar Farmacs Prescrits  ---------------------------
 FX.PRESCRITS<-Nmostra %>% LLEGIR.FX.PRESCRITS()
 FX.PRESCRITS<-FX.PRESCRITS %>% filter(agr=="HIPOTENS" | agr=="ANTIDIAB")
 
-farmacs_prescrits<-agregar_prescripcions(dt=FX.PRESCRITS,bd.dindex="20161231",dt.agregadors=CATALEG,prefix="FP.",finestra.dies = c(-1,+1),camp_agregador="antiHTA")
+farmacs_prescrits<-agregar_prescripcions(dt=FX.PRESCRITS,bd.dindex=data_index,dt.agregadors=CATALEG,prefix="FP.",finestra.dies = c(-1,+1),camp_agregador=grup_atc)
 
-farmacs_prescrits_tot<-agregar_prescripcions(dt=FX.PRESCRITS,bd.dindex="20161231",dt.agregadors=CATALEG,prefix="FP.",finestra.dies = c(-1,+1),camp_agregador="agr")
-
+farmacs_prescrits_tot<-agregar_prescripcions(dt=FX.PRESCRITS,bd.dindex=data_index,dt.agregadors=CATALEG,prefix="FP.",finestra.dies = c(-1,+1),camp_agregador="agr")
 
 # Ara fusionar pacients amb faramcs ------------------
 PACIENTS<-PACIENTS %>% 
@@ -314,6 +335,10 @@ dades <-dades %>% mutate_at(vars(starts_with("FD.")),
 
 # Descriptiu antiHTA
 
+descrTable(HTA~.-idp-idup-sexe-situacio-dnaix-entrada-sidiaph-qmedea-rural-DM-sortida-E11-FP.ANTIDIAB,data=dades,show.n = T,show.p.overall = F)
+
+
+
 descrTable(HTA~FD.HIPOTENS+FD.C02_ALT+FD.C08_CAL+FD.C09_IECA+FP.C02_ALT+FP.C08_CAL+FP.C09_IECA,data=dades,show.n = T,show.p.overall = F)
 
 descrTable(DM~FD.HIPOTENS+FD.C02_ALT+FD.C08_CAL+FD.C09_IECA+FP.C02_ALT+FP.C08_CAL+FP.C09_IECA,data=dades,show.n = T,show.p.overall = F)
@@ -323,7 +348,6 @@ descrTable(DM~FD.HIPOTENS+FD.C02_ALT+FD.C08_CAL+FD.C09_IECA+FP.C02_ALT+FP.C08_CA
 descrTable(HTA~FP.ANTIDIAB+FD.ANTIDIAB+FD.HIPOTENS,data=dades,show.n = T,show.p.overall = F)
 
 descrTable(DM~FP.ANTIDIAB+FD.ANTIDIAB+FD.HIPOTENS,data=dades,show.n = T,show.p.overall = F)
-
 
 
 
