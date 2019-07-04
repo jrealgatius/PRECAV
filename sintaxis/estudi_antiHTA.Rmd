@@ -12,20 +12,20 @@ output:
 
 
 
-### Estudi d'anti HTA ######
+> Estudi d'anti HTA ######
 
 
-# 1. Seleccionar població en una data (Data d'esdeveniment)
-# 2. Agregar quins son AntiHTA / No 
-# 3. Agregar quins porten Farmac AntiHTA per grup 
-# 4. Descriptiva
+* 1. Seleccionar població en una data (Data d'esdeveniment)
+* 2. Agregar quins son AntiHTA / No 
+* 3. Agregar quins porten Farmac AntiHTA per grup 
+* 4. Descriptiva
 
 
 
 
-#####################  PROCES LECTURA DE DADES ----------------------------------
-#
-####  Aplicació de criteris d'inclusió i lectura de dades     
+# PROCES LECTURA DE DADES ----------------------------------
+
+# Aplicació de criteris d'inclusió i lectura de dades     
 
 
 memory.size(max=160685)
@@ -348,6 +348,19 @@ descrTable(DM~FD.HIPOTENS+FD.C02_ALT+FD.C08_CAL+FD.C09_IECA+FP.C02_ALT+FP.C08_CA
 descrTable(HTA~FP.ANTIDIAB+FD.ANTIDIAB+FD.HIPOTENS,data=dades,show.n = T,show.p.overall = F)
 
 descrTable(DM~FP.ANTIDIAB+FD.ANTIDIAB+FD.HIPOTENS,data=dades,show.n = T,show.p.overall = F)
+
+
+
+```
+
+```{r EVOLUCIO_FARMACS_HIPOTENSORS}
+FX.FACTURATS<-FX.FACTURATS %>% mutate(any=substr(as.character(dat),1,4))
+FX.PRESCRITS<-FX.PRESCRITS %>% mutate(any=substr(as.character(dat),1,4))
+
+FX.FACTURATS %>% filter(agr=="HIPOTENS") %>% group_by(any) %>% summarise(n=n(),prop=(n()/length(FX.FACTURATS$any))*100)
+FX.PRESCRITS %>% filter(agr=="HIPOTENS") %>% group_by(any) %>% summarise(n=n(),prop=(n()/length(FX.PRESCRITS$any))*100)
+
+
 
 
 
