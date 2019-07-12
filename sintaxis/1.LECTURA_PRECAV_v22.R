@@ -91,42 +91,42 @@ llistaPS=c("sexe","any_naix","idup")
 CATALEG<-readxl::read_excel(file.path("dades",fitxer_conductor_cataleg),col_types = "text")
 
 LLEGIR.PACIENTS<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_pacients_20190517_101801.rds") %>% as_tibble() %>% head(n)}
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_pacients_20190517_101801.rds")) %>% as_tibble() %>% head(n)}
 
 LLEGIR.PROBLEMES<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_problemes_20181123_172533.rds")%>% as_tibble() %>% head(n)}
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_problemes_20181123_172533.rds"))%>% as_tibble() %>% head(n)}
 
 LLEGIR.CMBDH<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_cmbd_dx_20181123_172533.rds")%>% as_tibble() %>% head(n)}
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_cmbd_dx_20181123_172533.rds"))%>% as_tibble() %>% head(n)}
 
 LLEGIR.padris<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_cmbd_dx_padris_20181123_172533.rds")%>% as_tibble() %>% head(n)}
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_cmbd_dx_padris_20181123_172533.rds"))%>% as_tibble() %>% head(n)}
 
 LLEGIR.PROC<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_cmbd_px_padris_20181123_172533.rds")%>% as_tibble() %>% head(n)}
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_cmbd_px_padris_20181123_172533.rds"))%>% as_tibble() %>% head(n)}
 
 LLEGIR.TABAC<-function(n=Nmostra) {
-    readRDS("ECV_CAT_entregable_tabaquisme_20181123_172533.rds")%>% as_tibble() %>% head(n) }
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_tabaquisme_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
 
 LLEGIR.DERIVACIONS<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_derivacions_20181123_172533.rds")%>% as_tibble() %>% head(n) }
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_derivacions_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
 
 LLEGIR.FX.FACTURATS<-function(n=Nmostra) {
-  readRDS(file.path("dades/sidiap","ECV_CAT_entregable_facturacions_20190517_101801.rds"))%>% as_tibble() %>% head(n) }
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_facturacions_20190705_071704.rds"))%>% as_tibble() %>% head(n) }
 
 LLEGIR.FX.PRESCRITS<-function(n=Nmostra) {
-  readRDS(file.path("dades/sidiap","ECV_CAT_entregable_prescripcions_20190517_101801.rds"))%>% as_tibble() %>% head(n) }
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_prescripcions_20190705_071704.rds"))%>% as_tibble() %>% head(n) }
 
 LLEGIR.VARIABLES<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_variables_analitiques_20181123_172533.rds")%>% as_tibble() %>% head(n) }
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_variables_analitiques_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
 
 LLEGIR.CLINIQUES<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_variables_cliniques_20181123_172533.rds")%>% as_tibble() %>% head(n) }
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_variables_cliniques_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
 
 LLEGIR.VISITES<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_visites_20181123_172533.rds")%>% as_tibble() %>% head(n) }
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_visites_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
 
-##  Llegir 
+##  Llegir
 
 PACIENTS<-Inf %>% LLEGIR.PACIENTS()
 PROBLEMES<-Nmostra %>% LLEGIR.PROBLEMES()

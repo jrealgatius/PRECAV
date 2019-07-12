@@ -5,13 +5,6 @@ memory.size(max=160685)
 
 rm(list=ls())
 ###
-directori.arrel<-c("C:/Users/Jordi/Google Drive", 
-                   "C:/Users/usuari/Google Drive",
-                   "C:/Users/43728088M/Google Drive",
-                   "C:/Users/jreal/Google Drive",
-                   "D:/Google Drive",
-                   "G:/Google Drive",
-                   "E:/Google Drive")
 
 
 library(dplyr)
@@ -19,52 +12,47 @@ directori.arrel[file.exists(directori.arrel)] %>%
   file.path("Stat_codis/funcions_propies.R") %>% 
   source()
 
-####    DIRECTORI DE TREBALL              
-#### setwd en directori de treball 
-
-"CIBERDEM/GEDAPS/PRECAV/DADESSIDIAP2" %>% 
-  directori_treball(directori.arrel)
-
+library(here)
 
 ### LECTURA ---------------------------
 
 # CATALEG<-readRDS("ECV_CAT_entregable_cataleg_20190517_101801.rds")
 # library("xlsx")
 LLEGIR.PACIENTS<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_pacients_20190517_101801.rds") %>% as_tibble() %>% head(n)}
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_pacients_20190517_101801.rds")) %>% as_tibble() %>% head(n)}
 
 LLEGIR.PROBLEMES<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_problemes_20181123_172533.rds")%>% as_tibble() %>% head(n)}
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_problemes_20181123_172533.rds"))%>% as_tibble() %>% head(n)}
 
 LLEGIR.CMBDH<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_cmbd_dx_20181123_172533.rds")%>% as_tibble() %>% head(n)}
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_cmbd_dx_20181123_172533.rds"))%>% as_tibble() %>% head(n)}
 
 LLEGIR.padris<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_cmbd_dx_padris_20181123_172533.rds")%>% as_tibble() %>% head(n)}
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_cmbd_dx_padris_20181123_172533.rds"))%>% as_tibble() %>% head(n)}
 
 LLEGIR.PROC<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_cmbd_px_padris_20181123_172533.rds")%>% as_tibble() %>% head(n)}
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_cmbd_px_padris_20181123_172533.rds"))%>% as_tibble() %>% head(n)}
 
 LLEGIR.TABAC<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_tabaquisme_20181123_172533.rds")%>% as_tibble() %>% head(n) }
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_tabaquisme_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
 
 LLEGIR.DERIVACIONS<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_derivacions_20181123_172533.rds")%>% as_tibble() %>% head(n) }
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_derivacions_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
 
 LLEGIR.FX.FACTURATS<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_facturacions_20190517_101801.rds")%>% as_tibble() %>% head(n) }
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_facturacions_20190705_071704.rds"))%>% as_tibble() %>% head(n) }
 
 LLEGIR.FX.PRESCRITS<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_prescripcions_20190517_101801.rds")%>% as_tibble() %>% head(n) }
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_prescripcions_20190705_071704.rds"))%>% as_tibble() %>% head(n) }
 
 LLEGIR.VARIABLES<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_variables_analitiques_20181123_172533.rds")%>% as_tibble() %>% head(n) }
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_variables_analitiques_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
 
 LLEGIR.CLINIQUES<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_variables_cliniques_20181123_172533.rds")%>% as_tibble() %>% head(n) }
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_variables_cliniques_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
 
 LLEGIR.VISITES<-function(n=Nmostra) {
-  readRDS("ECV_CAT_entregable_visites_20181123_172533.rds")%>% as_tibble() %>% head(n) }
+  readRDS("dades/sidiap" %>% here::here("ECV_CAT_entregable_visites_20181123_172533.rds"))%>% as_tibble() %>% head(n) }
 
 ##  Llegir 
 
@@ -152,3 +140,35 @@ gc()
 saveRDS(VISITES_mostra,file="./dades_test/VISITES_mostra.rds")
 
 rm(VISITES_mostra)
+
+
+# Seleccionar facturacions + prescripcions de la mostra de pacients  ---------
+
+Nmostra<-Inf
+
+LLEGIR.PACIENTS<-function(n=Nmostra) {
+  readRDS("./dades/sidiap_test/pacients_mostra.rds") %>% as_tibble() %>% head(n)}
+
+pacients_mostra<-Inf %>% LLEGIR.PACIENTS()
+
+# Obrir base de dades total de facturacions 
+
+# Farmacs facturats -------------
+FX.FACTURATS<-Nmostra %>% LLEGIR.FX.FACTURATS()
+
+FX.FACTURATS_mostra<-pacients_mostra %>% select(idp) %>% inner_join(FX.FACTURATS,by="idp")
+rm(FX.FACTURATS)
+gc()
+
+saveRDS(FX.FACTURATS_mostra,file="dades/sidiap_test" %>% here::here("FX.FACTURATS_mostra.rds"))
+rm(FX.FACTURATS_mostra)
+
+# Farmacs prescrits -------------
+FX.PRESCRITS<-Nmostra %>% LLEGIR.FX.PRESCRITS
+
+FX.PRESCRITS_mostra<-pacients_mostra %>% select(idp) %>% inner_join(FX.PRESCRITS,by="idp")
+rm(FX.PRESCRITS)
+gc()
+
+saveRDS(FX.PRESCRITS_mostra,file="dades/sidiap_test" %>% here::here("FX.PRESCRITS_mostra.rds"))
+
