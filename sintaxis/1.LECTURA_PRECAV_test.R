@@ -37,13 +37,13 @@ Nmostra=Inf
 AGR_CAS<-"ECV_TER"
 # 
 # fitxersortida
-fitxersortida<-"./dades/preparades/BD_PRECAV_test3.rds"
+fitxersortida<-"./dades/preparades/BD_PRECAV_test4.rds"
 
 # fitxer conductor cataleg 
-fitxer_conductor_cataleg<-"./dades/cataleg_4.6.19_arreglat.xls"
+fitxer_conductor_cataleg<-"cataleg_precav.xls"
 
 # fitxer conductor variables
-fitxer_conductor_variables<-"./dades/variables_precav.xls"
+fitxer_conductor_variables<-"variables_precav.xls"
 
 # Nombre de controls per cas
 num_controls<-4
