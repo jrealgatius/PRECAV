@@ -8,19 +8,9 @@ memory.size(max=160685)
 
 rm(list=ls())
 
-directori.arrel<-c("C:/Users/Jordi/Google Drive", 
-                   "C:/Users/usuari/Google Drive",
-                   "C:/Users/43728088M/Google Drive",
-                   "C:/Users/jreal/Google Drive",
-                   "D:/Google Drive",
-                   "G:/Google Drive",
-                   "E:/Google Drive")
+link_source<-paste0("https://github.com/jrealgatius/Stat_codis/blob/master/funcions_propies.R","?raw=T")
+devtools::source_url(link_source)
 
-
-library(dplyr)
-directori.arrel[file.exists(directori.arrel)] %>% 
-  file.path("Stat_codis/funcions_propies.R") %>% 
-  source()
 
 ####    DIRECTORI DE TREBALL              
 #### setwd en directori de treball 
@@ -129,7 +119,7 @@ CMBDH_PROC<-Nmostra %>% LLEGIR.PROC()
 #-	Antiguitat a (Data entrada a SIDIAP<01/2007)
 #-	Amb com a mínim una determinació entre (2007-2010).* (data d’entrada a la cohort)
 #-	Edat superior >=29 anys  i inferior a 75 anys a 01/2010 a data d’entrada a la cohort (07-10)  (per tant el casos tindran com a mínim 35 durant a 01/2010 y 75 anys inclòs)
-    #   Any de naixament <1981 and >1935
+#   Any de naixament <1981 and >1935
 #-  Actius a 2010
 ####  Excloc: Difunts a 2010 
 
@@ -194,6 +184,16 @@ PACIENTS<-PACIENTS %>%
   mutate (event=ifelse(is.na(dtevent),0, event)) %>% 
   filter(ANT.event==0) %>% ### SELECCIONO PACIENTS SENSE ANTECEDENTS CV a 2010/01/01
   select(-ANT.event)
+
+
+# Exclourer DM1 (E10) + Fibrilació auricular () en 2010/01/01 -----
+
+DM1_dt<-agregar_problemes_agr(dt=PROBLEMES_total,agregador = "E10",camp_agregador = "agr",bd.dindex = "20100101",dt.agregadors = CATALEG,finestra.dies=c(-Inf,0))
+FA_dt<-agregar_problemes_agr(dt=PROBLEMES_total,agregador = "FA",camp_agregador = "agr",bd.dindex = "20100101",dt.agregadors = CATALEG,finestra.dies=c(-Inf,0))
+
+# Excloc de PACIENTS els que tenien DM1 i FA a 2010 
+PACIENTS<-PACIENTS %>% anti_join(DM1_dt,by="idp")
+PACIENTS<-PACIENTS %>% anti_join(FA_dt,by="idp")
 
 # 5. Algoritme de seleccio de controls           ----------------
 ##
