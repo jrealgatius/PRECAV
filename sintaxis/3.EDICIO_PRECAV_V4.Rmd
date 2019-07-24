@@ -52,12 +52,16 @@ Determinar el perfil de riesgo (estimado mediante la ecuación REGICOR) antes de
 - Muestra inicial de aprox un 8% (N=400000 random) de la base poblacional (N=5 400 000) por motivos computacionales
 - Post aplicación de criterios de inclusión + matching = 7599 casos y 23705 controles (r=1:4)
 
-## Actualizaciones:
+## Actualizado: 
+
+&check; Encontrado fallo del bajo registro de los Anti HTA 
+&check; Reanalizado con datos de facturaciones i prescripciones anti-HTA
+
+## Realizado:
 
 &check; Calculada la variable FHF (fenotipo hipercolesterolemia familiar) <br />
 &check; Generada variable HTA (Que incluye complicacionaes y otras HTA) <br />
 &check; Analisis con categorias Regicor (OR's + Curva ROC) <br />
-
 &check; Flowchart <br />
 &check; Recalculadas estimaciones ORs y errores estandar teniendo naturaleza apareada del estudio (Logistica condicional) <br />
 &check; Recodificaciones y calculos (Regicor, IMC, HDL_bajo....) <br />
@@ -68,7 +72,6 @@ Determinar el perfil de riesgo (estimado mediante la ecuación REGICOR) antes de
 
 * Reajuste por variables determinates potencialmente confusoras (Visitas previas etc..)
 * Recodificaciones y cálculos
-* Encontrar fallo del bajo registro de los Anti HTA 
 * Análisis de sensibilidad con valores faltantes (MIA /categoria missing....)
 * Valdiación estadística completa de los modelos según criterios estadísticos
 * Mover ventana temporal para evitar contaminación y evaluar evolución
@@ -77,7 +80,6 @@ Determinar el perfil de riesgo (estimado mediante la ecuación REGICOR) antes de
 * Análisis definitivo
 
 ****
-
 
 ## 0. Flow-chart 
 

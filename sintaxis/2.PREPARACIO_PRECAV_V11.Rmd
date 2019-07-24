@@ -27,20 +27,11 @@ knitr::opts_chunk$set(
 
 rm(list=ls())
 
-#
-directori.arrel<-c("C:/Users/Jordi/Google Drive", 
-                   "C:/Users/usuari/Google Drive",
-                   "C:/Users/43728088M/Google Drive",
-                   "C:/Users/jreal/Google Drive",
-                   "D:/Google Drive",
-                   "G:/Google Drive",
-                   "E:/Google Drive")
-
+link_source<-paste0("https://github.com/jrealgatius/Stat_codis/blob/master/funcions_propies.R","?raw=T")
+devtools::source_url(link_source)
 
 library(dplyr)
-directori.arrel[file.exists(directori.arrel)] %>% 
-  file.path("Stat_codis/funcions_propies.R") %>% 
-  source()
+library(here)
 
 
 ```
@@ -53,14 +44,14 @@ directori.arrel[file.exists(directori.arrel)] %>%
 
 library(here)
 
-fitxer_input<-"BD_PRECAV_test3.rds"
+fitxer_input<-"BD_PRECAV_test4.rds"
 fitxer_input<-here::here("dades/preparades",fitxer_input)
 
 output_PRECAV<-"output_PRECAV.Rdata"
 output_PRECAV<-"output/R_data" %>% here::here(output_PRECAV)
 
-conductor_variables<-"variables_precav.xls"
-conductor_variables<-"dades" %>% here::here(conductor_variables)
+conductor_variables<-here::here("variables_precav.xls")
+
 
 ```
 
@@ -169,10 +160,11 @@ dades<-dades %>%
 
 # Selecciono variables REGICOR i formatejo 
 # Ojo que s'ha de recalcular la edat 1-3 anys previs 
+# S'ha eliminat ANT1_3.E10 (Ja no existeix)
 
-dades_regicor<-selectorvariables("regicor",conductor_variables,dades) %>% 
+dades_regicor<-selectorvariables("regicor",taulavariables=conductor_variables,dt=dades) %>% 
   mutate(age=edat,
-         diabetes=if_else(ANT1_3.E10==1 | ANT1_3.E11,1,0),
+         diabetes=if_else(ANT1_3.E11==1,1,0),
          smoker=if_else(tab.valor==1,1,0,missing = 0), 
          coltot=COLTOT.valor13a,
          colhdl=COLHDL.valor13a,
@@ -220,10 +212,10 @@ dades<-dades %>% mutate(col_noHDL13a=COLTOT.valor13a--COLHDL.valor13a)
 
 # regicor_cat (DM1 no te regicor)
 dades<-dades %>% mutate(regicor_cat=case_when(
-  DG.E10==0 & regicor<4.51~1,
-  DG.E10==0 & regicor>=4.51 & regicor<=9.51~2,
-  DG.E10==0 & regicor>=9.51 & regicor<=14.51~3,
-  DG.E10==0 & regicor>=14.51 ~4)) 
+  regicor<4.51~1,
+  regicor>=4.51 & regicor<=9.51~2,
+  regicor>=9.51 & regicor<=14.51~3,
+  regicor>=14.51 ~4)) 
 
 # FHF_cat (fenotipo hipercolesterolemia familiar) -----
 dades<-dades %>% 
@@ -256,10 +248,11 @@ Filtre por edat (Criteri d'inclusió entre 35 y 75 anys)
 n_controls_inicial<-table(dades$event)[1]
 n_casos_inicial<-table(dades$event)[2]
 
-# Aplicar filtre 
+# Aplicar filtre I 
 dades<-dades %>% filter(edat>=35 & edat<75)
 events_dt <-dades %>% filter(event==1) 
 events_dt %>% skimr::skim(edat)
+
 
 # Dades flow-chart
 n_controls_final<-table(dades$event)[1]
@@ -296,11 +289,11 @@ dades<-etiquetar(d=dades,taulavariables = conductor_variables)
 pob_lab<-"Población inicial (8%)"
 pob_lab1<-c("Potenciales controles","Controles")
 pob_lab2=c("Potenciales casos","Casos")
-pob<-c(287063)
-pob1<-c(273459,n_controls_final)
-exc1<-c(229982,n_controls_exc2)
+pob<-c(279814)
+pob1<-c(9999,n_controls_final)
+exc1<-c(9999,n_controls_exc2)
 exc_lab1<-c('Not matching','Fuera rango edad')
-pob2<-c(13604,n_casos_final)
+pob2<-c(9999,n_casos_final)
 exc2<-c(0,n_casos_exc2)
 exc_lab2<-c("Not matching","Fuera rango edad(35-75)")
 

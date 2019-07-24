@@ -217,6 +217,7 @@ dt=PACIENTS
 
 #     5.2.1. Generar data de sortida (Data event / Data de censura)     -----------------
 
+
 ## dtindex_case 
 dt<-dt %>% mutate(dtindex_case=ifelse(event==1, dtsortida,NA)) 
 
