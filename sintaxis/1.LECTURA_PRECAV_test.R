@@ -163,7 +163,6 @@ dates_casos<-PROBLEMES_total %>%
 
 #     CAPTURO DATA EVENT D'INTERES      
 #     Data d'esdeveniment CV Potencial a partir de : dtevent
-
 ### Afegeixo a Cohort (PACIENTS) + Casos amb la data d'esdeveniment
 
 PACIENTS<-PACIENTS %>% 
@@ -268,6 +267,7 @@ pp<-riskSetMatch(ptid="idp"                                # Unique patient iden
 )
 
 
+
 matchReport(pp, "idp",case="event",caseid="caseid")
 
 # Número de controls per conjunt a risk 
@@ -325,12 +325,27 @@ BDTOTAL<-pp %>%
   left_join(problemesEVTR_bd, by=c("idp","dtindex")) 
 
 
-#  6.3.2. Netejar bases de dades ------------------
+# 6.3.2. Guardar N's per cada grup 
+N_casos0<-PACIENTS %>% filter(event==1) %>% count() %>% as.numeric()
+N_controls0<-PACIENTS %>% filter(event==0) %>% count() %>% as.numeric()
+
+N_casosf<-pp %>% filter(event==1) %>% count() %>% as.numeric()
+N_controlsf<-pp %>% filter(event==0) %>% count() %>% as.numeric()
+
+
+dades_flow<-tibble::tibble(x=1:4,
+                           nom=c("N_cas","N_control","N_cas_f","N_control_f"),
+                           grup=c("cas","control","cas","control"),
+                           N=c(N_controls0,N_casos0,N_controlsf,N_casosf),
+                           lab=c("Potenciales casos","Potenciales controles","casos","controles"))
+
+
+# 6.3.3. Netejar bases de dades ------------------
 
 rm(list=c("PROBLEMES_total","problemes_bd","problemesDG2_bd","problemes_ANT1_3a","problemesEVPR_bd","problemesEVAM_bd","problemesEVSC_bd","problemesEVTR_bd",
           "dt","PACIENTS","dates_casos","pp"))
 
-#     6.4. Agregar Variables ---------------
+# 6.4. Agregar Variables ---------------
 VARIABLES<-Nmostra %>% LLEGIR.VARIABLES %>% select(idp,cod,val,dat) 
 variables_bd<-agregar_analitiques(dt=VARIABLES,bd.dindex =bdades_index,finestra.dies=c(-365,-45))
 gc()
@@ -408,10 +423,10 @@ variables_generades<-names(BDTOTAL) %>% tibble() %>% select(camp=".")
 
 write.csv2(variables_generades,"./dades/variables_precav.txt")
 
+
 # 10. Verificar variables noves en conductor
 conductor_variables<-readxl::read_excel(fitxer_conductor_variables)
-
-variables_noves<-variables_generades %>% full_join(conductor_variables,by="camp") %>% filter(is.na(id))
+variables_noves<-variables_generades %>% anti_join(conductor_variables,by="camp")
 
 write.csv2(variables_noves,"./dades/variables_noves_precav.txt")
 
