@@ -1,11 +1,11 @@
-#
+#                               FASE LECTURA                            ---------------------
 ####  Aplicació de criteris d'inclusió i lectura de dades     
 
 memory.size(max=160685)
 
 #
-#####################  Directori Font     ==============================  
-
+# Directori Font     ==============================  
+gc()
 rm(list=ls())
 
 link_source<-paste0("https://github.com/jrealgatius/Stat_codis/blob/master/funcions_propies.R","?raw=T")
@@ -27,7 +27,7 @@ Nmostra=Inf
 AGR_CAS<-"ECV_TER"
 # 
 # fitxersortida
-fitxersortida<-"./dades/preparades/BD_PRECAV_test4.rds"
+fitxersortida<-"./dades/preparades/BD_PRECAV_test5.rds"
 
 # fitxer conductor cataleg 
 fitxer_conductor_cataleg<-"cataleg_precav.xls"
@@ -63,15 +63,12 @@ llistaPS=c("sexe","any_naix","idup")
 
 # ECV_CAT_entregable_cataleg_20190517_101801.rds
 
-### LECTURA
-
-
+# LECTURA
 
 # CATALEG<-readRDS("ECV_CAT_entregable_cataleg_20190517_101801.rds")
 # library("xlsx")
 # write.xlsx(CATALEG,file="cataleg.xlsx")
 CATALEG<-readxl::read_excel(fitxer_conductor_cataleg,col_types = "text")
-
 
 LLEGIR.PACIENTS<-function(n=Nmostra) {
   readRDS("./dades/sidiap_test/pacients_mostra.rds") %>% as_tibble() %>% head(n)}
@@ -106,7 +103,7 @@ LLEGIR.CLINIQUES<-function(n=Nmostra) {
 LLEGIR.VISITES<-function(n=Nmostra) {
   readRDS("./dades/sidiap_test/VISITES_mostra.rds")%>% as_tibble() %>% head(n) }
 
-##  Llegir 
+#  Llegir PACIENTS, I PROBLEMES DE SALUT
 
 PACIENTS<-Inf %>% LLEGIR.PACIENTS()
 PROBLEMES<-Nmostra %>% LLEGIR.PROBLEMES()
@@ -121,37 +118,36 @@ CMBDH_PROC<-Nmostra %>% LLEGIR.PROC()
 #-	Edat superior >=29 anys  i inferior a 75 anys a 01/2010 a data d’entrada a la cohort (07-10)  (per tant el casos tindran com a mínim 35 durant a 01/2010 y 75 anys inclòs)
 #   Any de naixament <1981 and >1935
 #-  Actius a 2010
-####  Excloc: Difunts a 2010 
+#  Excloc: Difunts a 2010 
 
 PACIENTS<-PACIENTS %>% 
   filter (dnaix>19350101 & dnaix<19811231) %>%      # Nascuts entre el 35 i l'any 81
   filter (entrada<20070101) %>%                     # Antiguitat SIDIAP anterior a 2007
   filter (!(situacio=="D" & sortida<=20100101))     # Excloc: Difunts anterior a 2010
 
-
-# 3. Identificar Casos i fusionar problemes de salut   ---------------------------
+# 3.1. Identificar Casos i fusionar problemes de salut   ---------------------------
 
 # 3.1. Fusionar problemes de salut (IDENTIFICAR EVENTS CV POTENCIALS)
-
 PROBLEMES<-PROBLEMES %>% select(idp,cod,dat) 
 CMBDH<-CMBDH %>% select(idp,cod,dat) 
 CMBDH.padris<-CMBDH.padris %>% select(idp,cod,dat) 
 CMBDH_PROC<-CMBDH_PROC %>% select(idp,cod,dat) 
 
-### Juntar totes les bdades de problemes
+# Juntar totes les bdades de problemes
 PROBLEMES_total<-
   PROBLEMES %>% 
   rbind(CMBDH) %>% 
   rbind(CMBDH.padris) %>% 
   rbind(CMBDH_PROC) 
 
+# Eliminat problemes de salut
 rm(PROBLEMES)
 rm(CMBDH)
 rm(CMBDH_PROC)
 rm(CMBDH.padris)
 
-#    IDENTIFICACIÓ DE CASOS          
-# Identificació de casos i data index  --------
+
+# 3.2.Identificació de casos i data index  --------
 
 # Agrego problemes amb límit data máxima (31/12/2016) O sigui dels diagnostics agafo la primera data de cada problema de salut
 
@@ -160,17 +156,15 @@ dates_casos<-PROBLEMES_total %>%
   agregar_problemes_agr(bd.dindex="20161231",agregador =AGR_CAS,dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),prefix="",camp_agregador="AGR_TER") %>%  # agrego problemes de salut
   select(idp,dtevent=AGR_CAS,codindex=cod)
 
-
-#     CAPTURO DATA EVENT D'INTERES      
-#     Data d'esdeveniment CV Potencial a partir de : dtevent
-### Afegeixo a Cohort (PACIENTS) + Casos amb la data d'esdeveniment
+# CAPTURO DATA EVENT D'INTERES      
+# Data d'esdeveniment CV Potencial a partir de : dtevent
+# Afegeixo a Cohort (PACIENTS) + Casos amb la data d'esdeveniment
 
 PACIENTS<-PACIENTS %>% 
   dplyr::left_join(dates_casos, by="idp") %>% 
   as_tibble()
 
-
-# 4. Criteri d'exclusió 2 antecedent CV -------------
+# 4.1 Criteri d'exclusió 2 antecedent CV -------------
 # Genero variable ANTECEDENT i EVENT (CAS) i selecciono la cohort de pacients sense ANTECEDENTS
 
 # Considero data0 d'inici cohort 2010/01/01
@@ -184,39 +178,35 @@ PACIENTS<-PACIENTS %>%
   filter(ANT.event==0) %>% ### SELECCIONO PACIENTS SENSE ANTECEDENTS CV a 2010/01/01
   select(-ANT.event)
 
-
-# Exclourer DM1 (E10) + Fibrilació auricular () en 2010/01/01 -----
+# 4.2. Criteri d'exclusió 3 antecedent de DM1 o Fibrilació auricular--------
 
 DM1_dt<-agregar_problemes_agr(dt=PROBLEMES_total,agregador = "E10",camp_agregador = "agr",bd.dindex = "20100101",dt.agregadors = CATALEG,finestra.dies=c(-Inf,0))
 FA_dt<-agregar_problemes_agr(dt=PROBLEMES_total,agregador = "FA",camp_agregador = "agr",bd.dindex = "20100101",dt.agregadors = CATALEG,finestra.dies=c(-Inf,0))
 
-# Excloc de PACIENTS els que tenien DM1 i FA a 2010 
+# Excloc de PACIENTS els que tenien DM1 i FA a 01/010 
 PACIENTS<-PACIENTS %>% anti_join(DM1_dt,by="idp")
 PACIENTS<-PACIENTS %>% anti_join(FA_dt,by="idp")
 
 # 5. Algoritme de seleccio de controls           ----------------
-##
-#  5.1.	Assignar una data de sortida (data màxima a risc de tenir un esdeveniment)  -------
+
+#  5.1 Assignar una data de sortida (data màxima a risc de tenir un esdeveniment)  -------
 ##        	31/12/2016 / Data de mort-trasllat  / Data de primer EVENT )
 
 # Event data sortida = data event
 # Defunció data sortida = Data defuncio última de seguiment (12/2016)
 # altrament --> 20161231
 
-
 # Genero data de sortida (dtsortida)
 PACIENTS <- PACIENTS %>% 
   mutate(dtsortida=case_when (event==1~ dtevent,
                              event==0 ~ as.Date(as.character(sortida),format="%Y%m%d") %>% as.numeric())) 
                              
-#  5.2. Preparar base de dades per l'aparellament ------------                    
+#  5.2 Preparar base de dades per l'aparellament ------------                    
 
 #######  Hi funsiono data random en a pacients       
 dt=PACIENTS
 
-#     5.2.1. Generar data de sortida (Data event / Data de censura)     -----------------
-
-
+#   5.2.1 Generar data de sortida (Data event / Data de censura)     -----------------
 ## dtindex_case 
 dt<-dt %>% mutate(dtindex_case=ifelse(event==1, dtsortida,NA)) 
 
@@ -230,61 +220,114 @@ dt<-dt %>% mutate (
   any_naix_g17=Hmisc::cut2(any_naix,seq(from = 1935, to = 1974, by = 2))
   ) 
 
-#     5.2.3. Generar conjunts a Risc by riskSetMatch  (Selecció de controls) ------------
-#  5.3. Seleccio de Controls  ---------
+#  5.3. Generar conjunts a Risc by riskSetMatch / incidenceMatch() ------------
 
-################     FUNCIÓ riskSetMatch          
-### Previament HE D'INSTALAR heaven 
+# FUNCIÓ riskSetMatch     
+# Previament s'ha d'intallar heaven package
 # install.packages("devtools")
 # install.packages("githubinstall")
 # library(devtools)
 # library(githubinstall)
-# githubinstall("heaven")
+
+# Installar versió de github 964bbbd (2018.08.09)
+# githubinstall("heaven",ref="964bbbd",force=T) # "2018.8.9"
 
 library(heaven)
+library(parallel)
+library(foreach)
 
-#### Llista d'aparellamenta
+# Ojo última versió de heaven ha canviat la funció a incidenceMatch()
 
-# llistaPS=c("sexe","any_naix","idup")
+#### Parametres d'aparellament
+llistaPS=c("sexe","any_naix","idup")
+set.seed(125)
+ 
+#  5.4 Inici d'algoritme incidenceMatch() o riskSetMatch  -------------------------
+# En funció de la versió 
 
-set.seed(123)
+# Ojo!! Obsoleta  en ultima versió del paquet heaven -
+if (packageVersion("heaven")=="2018.8.9") {
+  
+  # 5.4.1. Aplicar algoritme   -----------
+  dades_match<-heaven::riskSetMatch(ptid="idp"                                # Unique patient identifier
+                                    ,event="event"                # 0=Control, 1=case
+                                    ,terms=llistaPS   # terms c("n1","n2",...) - list of vairables to match by
+                                    ,dat=dt                       # dataset with all variables
+                                    ,Ncontrols=num_controls       # number of controls to provide
+                                    ,oldevent="oldevent"          # To distinguish cases used as controls
+                                    ,caseid="caseid"              # variable to group cases and controls (case-ptid)
+                                    ,reuseCases=T                 # T og F or NULL - can a case be a control prior to being a case?
+                                    ,reuseControls=F              # T or F or NULL - can controls be reused?
+                                    ,caseIndex="dtindex_case"       # Integer or date, date where controls must be prior
+                                    ,controlIndex="dtindex_control" # controlIndex - Index date for controls
+                                    ,NoIndex=FALSE                # If T ignore index
+                                    ,cores=1                      # Number of cores to use, default 1
+                                    ,dateterms=NULL               # character list of date variables
+  )
+  
+  # 5.4.2. Report matchreport -------------
+  heaven::matchReport(dades_match, "idp",case="event",caseid="caseid")
+  
+  # 5.4.3. Número de controls per conjunt a risk  ------------
+  dades_match[,numControls:=.N,by=caseid]
+  dades_match<- dades_match %>% mutate(numControls=numControls-1)
 
+  # 5.4.4. Generar bdades_index --------------
+  bdades_index<-dades_match %>% 
+    select(idp,dataindex=dtindex_case)%>% 
+    mutate (dataindex=as.Date(dataindex,origin = "1970-01-01")) %>%
+    as_tibble()
+  dades_match<-dades_match %>% rename(dtindex=dtindex_case) %>% mutate (dtindex=as.Date(dtindex,origin = "1970-01-01"))
 
-pp<-riskSetMatch(ptid="idp"                                # Unique patient identifier
-                 ,event="event"                # 0=Control, 1=case
-                 ,terms=llistaPS   # terms c("n1","n2",...) - list of vairables to match by
-                 ,dat=dt                       # dataset with all variables
-                 ,Ncontrols=num_controls       # number of controls to provide
-                 ,oldevent="oldevent"          # To distinguish cases used as controls
-                 ,caseid="caseid"              # variable to group cases and controls (case-ptid)
-                 ,reuseCases=T                 # T og F or NULL - can a case be a control prior to being a case?
-                 ,reuseControls=F              # T or F or NULL - can controls be reused?
-                 ,caseIndex="dtindex_case"       # Integer or date, date where controls must be prior
-                 ,controlIndex="dtindex_control" # controlIndex - Index date for controls
-                 ,NoIndex=FALSE                # If T ignore index
-                 ,cores=1                      # Number of cores to use, default 1
-                 ,dateterms=NULL               # character list of date variables
-)
+  }
 
+# Última versió de heaven (2018.9.9) aplicar funció incidenceMatch()
+if (packageVersion("heaven")!="2018.8.9") {
 
+  # 5.4.1' Canviar el nom de event per case (Sino la cosa:incidenceMatch() peta) ------
+  dt <- dt %>% mutate(case=event) %>% as.data.table()
 
-matchReport(pp, "idp",case="event",caseid="caseid")
+  # 5.4.2' Aplicar algoritme incidenceMatch() ----------
+  dades_match<-heaven::incidenceMatch(ptid="idp"       # Unique patient identifier
+                       ,event="case"                   # 0=Control (never case), 1=case (Ojo no es pot anomenar "event", )
+                       ,terms=llistaPS                 # terms c("n1","n2",...) - list of vairables to match by
+                       ,data=dt                        # dataset with all variables
+                       ,n.controls=num_controls        # number of controls to provide
+                       ,case.index="dtindex_case"      # Variable integer or date, date where controls must be prior. Missing= No event at the end of followup
+                       ,end.followup="dtindex_control" # Variable defines the date from which a control can no longer be selected (exitus,censoring..)
+                       ,date.terms=NULL                # character list of date variables
+                       ,duration.terms=NULL	           # ??A list where each element defines a time duration term with two element
+                       ,output.count.controls=T        # TRUE add number of found controls to each case/control set.
+                       ,cores=6                        # Number of cores to use, default 1
+                       ,seed=llavor
+                       ,progressbar=T)
+  # 5.4.3'. Report matchreport -------------
+  matchReport(dades_match)
 
-# Número de controls per conjunt a risk 
-pp[,numControls:=.N,by=caseid]
+  # 5.4.4' Renombrar noms de columnes generades (dades_match)  ------
+  colnames(dades_match)[1:3]<-c("idp.num","caseid","case_event")
+  dades_match<-dades_match %>%
+    rename("numControls"="n.controls") %>%
+    rename("event_futur"="event") %>%
+    rename("event"="case_event")
 
-#  5.4. Verificació de Matching -----------------------
+  # 5.4.3' Agregar data index a cada grups a risk i generar bdades_index -------------
+  dates_index<-dades_match %>% filter(event==1) %>%
+    select(caseid,event,dataindex=dtindex_case) %>%
+    mutate (dataindex=as.Date(dataindex,origin = "1970-01-01")) %>%
+    select(caseid,dataindex)
+  
+  bdades_index<-dades_match %>% select(idp,caseid) %>% left_join(dates_index,by="caseid") %>% select(-caseid) %>% as_tibble()
+  dades_match<-dades_match %>% left_join(dates_index,by="caseid") %>% rename(dtindex=dataindex) %>% as_tibble()
+  }
 
-# llistaPS=c("sexe","any_naix","idup")
+gc()
 
-llista.compare.Ys(dt=pp,llista.y=c("event"),llista.x=llistaPS,show.ratio=F,byrow=F)
+# 5.4.4. Verificació de Matching aprox -----------------------
+descrTable(formula_vector(llistaPS,y="event"),data=dades_match)
+# extreure_OR("event~sexe+any_naix",dades=dades_match,conditional = T,strata="caseid")
 
-# 6. Agregar en data index  -------------------------------
-pp<-pp %>% mutate (
-  dataindex=dtindex_case,
-  dataindex=as.Date(dataindex,origin = "1970-01-01"))
-
-bdades_index<-pp %>% select(idp,dataindex) %>% as_tibble()
+# 6. Agregar variables en data index -----------------------
 
 #     6.1. Agregar visites (Any anterior) -------------
 VISITES<-Nmostra %>% LLEGIR.VISITES()
@@ -300,22 +343,22 @@ problemesDG2_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex =bdades_index,dt
 #     6.2.2 Agregar Problemes (Events Principals) ----------------
 problemesEVPR_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex =bdades_index,dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),camp_agregador="AGR_PR",prefix = "EV.")
 
-#     6.2.3. Agregar Problemes (Events Ampliats) --------------------
+#     6.2.3 Agregar Problemes (Events Ampliats) --------------------
 problemesEVAM_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex =bdades_index,dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),camp_agregador="AGR_AMP",prefix = "EV.")
 
-#     6.2.4. Agregar Problemes (Events Secundaris) -----------------
+#     6.2.4 Agregar Problemes (Events Secundaris) -----------------
 problemesEVSC_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex =bdades_index,dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),camp_agregador="AGR_SEC",prefix = "EV.")
 
-#     6.2.5. Agregar Problemes (Events Territorios) -----------------
+#     6.2.5 Agregar Problemes (Events Territorios) -----------------
 problemesEVTR_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex =bdades_index,dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),camp_agregador="EV_TER",prefix = "EV.TER.")
 
-#     6.2.6. Agregar antecedents antics (agr)) de 1-3a ---------------------
+#     6.2.6 Agregar antecedents antics (agr)) de 1-3a ---------------------
 problemes_ANT1_3a<-agregar_problemes(dt=PROBLEMES_total,bd.dindex =bdades_index,dt.agregadors=CATALEG,finestra.dies=c(-Inf,-45),camp_agregador="agr",prefix = "ANT1_3.")
 
-#     6.3.1. Fusionar tots els problemes de Salut per alliberar memoria --------------------
-pp<-as_tibble(pp) %>% rename(dtindex=dataindex)
+#
 
-BDTOTAL<-pp %>% 
+#     6.3.1 Fusionar tots els problemes de Salut per alliberar memoria --------------------
+BDTOTAL<-dades_match %>% 
   left_join(problemes_bd, by=c("idp","dtindex")) %>% 
   left_join(problemesDG2_bd, by=c("idp","dtindex")) %>% 
   left_join(problemes_ANT1_3a, by=c("idp","dtindex")) %>% 
@@ -324,26 +367,29 @@ BDTOTAL<-pp %>%
   left_join(problemesEVSC_bd, by=c("idp","dtindex")) %>% 
   left_join(problemesEVTR_bd, by=c("idp","dtindex")) 
 
+gc()
 
 # 6.3.2. Guardar N's per cada grup 
-N_casos0<-PACIENTS %>% filter(event==1) %>% count() %>% as.numeric()
-N_controls0<-PACIENTS %>% filter(event==0) %>% count() %>% as.numeric()
-
-N_casosf<-pp %>% filter(event==1) %>% count() %>% as.numeric()
-N_controlsf<-pp %>% filter(event==0) %>% count() %>% as.numeric()
-
-
 dades_flow<-tibble::tibble(x=1:4,
-                           nom=c("N_cas","N_control","N_cas_f","N_control_f"),
-                           grup=c("cas","control","cas","control"),
-                           N=c(N_controls0,N_casos0,N_controlsf,N_casosf),
-                           lab=c("Potenciales casos","Potenciales controles","casos","controles"))
+                            tipus=c("Control","Cas","Control","Cas"),
+                            etiqueta=c("Inicial","Inicial","Post_Match","Post_Match"),
+                            N=c(table(PACIENTS$event) %>% as.vector(),table(BDTOTAL$event) %>% as.vector()))
 
+# N_casos0<-PACIENTS %>% filter(event==1) %>% count() %>% as.numeric()
+# N_controls0<-PACIENTS %>% filter(event==0) %>% count() %>% as.numeric()
+# N_casosf<-dades_match %>% filter(event==1) %>% count() %>% as.numeric()
+# N_controlsf<-dades_match %>% filter(event==0) %>% count() %>% as.numeric()
+# N_casos_0controls<-dades_match %>% filter(numControls==0) %>% count() %>% as.numeric()
+# dades_flow<-tibble::tibble(x=1:6,
+#                            nom=c("N_cas","N_control","N_cas_f","N_control_f","N_cas_exclos","NA"),
+#                            grup=c("cas","control","cas","control","cas","Control"),
+#                            N=c(N_casos0,N_controls0,N_casosf,N_controlsf,N_casos_0controls,NA),
+#                            lab=c("Potenciales casos","Potenciales controles","Casos","Controles","Casos exclosos sense control","Exclosos"))
 
-# 6.3.3. Netejar bases de dades ------------------
+# 6.3. Netejar bases de dades ------------------
 
 rm(list=c("PROBLEMES_total","problemes_bd","problemesDG2_bd","problemes_ANT1_3a","problemesEVPR_bd","problemesEVAM_bd","problemesEVSC_bd","problemesEVTR_bd",
-          "dt","PACIENTS","dates_casos","pp"))
+          "dt","PACIENTS","dates_casos"))
 
 # 6.4. Agregar Variables ---------------
 VARIABLES<-Nmostra %>% LLEGIR.VARIABLES %>% select(idp,cod,val,dat) 
@@ -384,10 +430,10 @@ gc()
 # 7. Fusionar totes les taules -----------------------
 # BDINDEX + PACIENTS + PROBLEMES + VARIABLES + VISITES + TABAC + FARMACS
 
-# bdades_index + pp + problemes_bd + analitiques_bd + visites_bd + tabac_bd +farmacs_dispensats + farmacs_prescrits
+# bdades_index + dades_match + problemes_bd + analitiques_bd + visites_bd + tabac_bd +farmacs_dispensats + farmacs_prescrits
 
 
-# Formatejar dtindex a numeric BDTOTAL --------------
+#   7.1. Formatejar dtindex a numeric BDTOTAL --------------
 BDTOTAL <-BDTOTAL %>% mutate (dtindex=as.numeric(dtindex))
 variables_bd <- variables_bd %>% mutate (dtindex=as.numeric(dtindex))
 farmacs_dispensats <- farmacs_dispensats %>% mutate (dtindex=as.numeric(dtindex))
@@ -414,13 +460,11 @@ BDTOTAL<- BDTOTAL %>%
 BDTOTAL<-BDTOTAL %>% mutate(dtindex=lubridate::as_date(dtindex))
 
 # 8. Salvar taula plana  ------------
-
 saveRDS(BDTOTAL,fitxersortida)  
-
+saveRDS(dades_flow,"./dades/dades_flow.rds")
 
 # 9. Salvar conductor variables -----------------
 variables_generades<-names(BDTOTAL) %>% tibble() %>% select(camp=".")
-
 write.csv2(variables_generades,"./dades/variables_precav.txt")
 
 
