@@ -234,6 +234,19 @@ dades<-dades %>%
 # DG.HTA_O + DG.COMP_HTA ----------------
 dades<-dades %>% mutate(DG.HTA=if_else(DG.HTA_O==1 | DG.COMP_HTA==1,1,0))
 
+# LDL ALTO: ldlalto13a_cat2 (LDL>190 sin tratamiento hipilipemiante)
+dades<- dades %>% 
+  mutate(ldlalto_cat2=case_when(
+    COLLDL.valor13a>190 & FD1_3a.HIPOLIP==0 ~ "LDL>190 Sin Tx",
+    COLLDL.valor13a>190 & FD1_3a.HIPOLIP==1 ~ "LDL>190 con Tx",
+    COLLDL.valor13a<=190 ~ "LDL<190"))
+
+# LDL BAJO: ldlbajo13a_cat2 (LDL>160 con tratamiento hipilipemiante)
+dades<- dades %>% 
+  mutate(ldlalto_cat2=case_when(
+    COLLDL.valor13a>160 & FD1_3a.HIPOLIP==1 ~ "LDL>160 + Tx",
+    COLLDL.valor13a>160 & FD1_3a.HIPOLIP==0 ~ "LDL>160 sin Tx",
+    COLLDL.valor13a<=160 ~ "LDL<160"))
 
 # Recodes
 
@@ -268,10 +281,18 @@ dades<-dades %>% filter(numControls>Nmin_Crl_Cas)
 
 # Aplicar filtre I (Per rang d'edat)
 Freq_pre_exc1<-table(dades$event) %>% as.vector()
+# Labels N >=35 i N<75
+lab_cas1<-(dades$edat<35 & dades$event==1) %>% as.numeric() %>% sum()
+lab_cas2<-(dades$edat>=75 & dades$event==1) %>% as.numeric() %>% sum()
+lab_cnt1<-(dades$edat<35 & dades$event==0) %>% as.numeric() %>% sum()
+lab_cnt2<-(dades$edat>=75 & dades$event==0) %>% as.numeric() %>% sum()
+etiqueta_cnt<-paste0("Age<35 (n=",lab_cnt1,") \\n or >=75 (n=",lab_cnt2,")")
+etiqueta_cas<-paste0("Age<35 (n=",lab_cas1,") \\n or >=75 (n=",lab_cas2,")")
+# Filtre
 dades<-dades %>% filter(edat>=35 & edat<75)
 Freq_post_exc1<-table(dades$event) %>% as.vector()
 
-dades_flow<-add_row(dades_flow,x=c(7,8),grup=c("Control","Cas"),tipo=c("exc","exc"),etiqueta=c("Fuera rango","Fuera de rango(35-75)"),N=Freq_pre_exc1-Freq_post_exc1)
+dades_flow<-add_row(dades_flow,x=c(7,8),grup=c("Control","Cas"),tipo=c("exc","exc"),etiqueta=c(etiqueta_cnt,etiqueta_cas),N=Freq_pre_exc1-Freq_post_exc1)
 
 # Aplicar filtre II (Per E10)
 temp<-dades %>% filter(DG.E10==1) 
