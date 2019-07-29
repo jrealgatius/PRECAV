@@ -240,13 +240,16 @@ library(foreach)
 
 #### Parametres d'aparellament
 llistaPS=c("sexe","any_naix","idup")
-set.seed(125)
- 
+llavor<-125
+set.seed(llavor)
+
+
+
 #  5.4 Inici d'algoritme incidenceMatch() o riskSetMatch  -------------------------
 # En funció de la versió 
 
 # Ojo!! Obsoleta  en ultima versió del paquet heaven -
-if (packageVersion("heaven")=="2018.8.9") {
+if (exists('riskSetMatch', where='package:heaven', mode='function')) {
   
   # 5.4.1. Aplicar algoritme   -----------
   dades_match<-heaven::riskSetMatch(ptid="idp"                                # Unique patient identifier
@@ -282,7 +285,7 @@ if (packageVersion("heaven")=="2018.8.9") {
   }
 
 # Última versió de heaven (2018.9.9) aplicar funció incidenceMatch()
-if (packageVersion("heaven")!="2018.8.9") {
+if (!exists('riskSetMatch', where='package:heaven', mode='function')) {
 
   # 5.4.1' Canviar el nom de event per case (Sino la cosa:incidenceMatch() peta) ------
   dt <- dt %>% mutate(case=event) %>% as.data.table()
@@ -298,17 +301,18 @@ if (packageVersion("heaven")!="2018.8.9") {
                        ,date.terms=NULL                # character list of date variables
                        ,duration.terms=NULL	           # ??A list where each element defines a time duration term with two element
                        ,output.count.controls=T        # TRUE add number of found controls to each case/control set.
-                       ,cores=6                        # Number of cores to use, default 1
+                       ,cores=4                        # Number of cores to use, default 1
                        ,seed=llavor
                        ,progressbar=T)
   # 5.4.3'. Report matchreport -------------
-  matchReport(dades_match)
-
+  # matchReport(dades_match)
+  table(dades_match$n.controls) %>% print()
+  
   # 5.4.4' Renombrar noms de columnes generades (dades_match)  ------
   colnames(dades_match)[1:3]<-c("idp.num","caseid","case_event")
   dades_match<-dades_match %>%
     rename("numControls"="n.controls") %>%
-    rename("event_futur"="event") %>%
+    rename("oldevent"="event") %>%
     rename("event"="case_event")
 
   # 5.4.3' Agregar data index a cada grups a risk i generar bdades_index -------------
@@ -324,8 +328,10 @@ if (packageVersion("heaven")!="2018.8.9") {
 gc()
 
 # 5.4.4. Verificació de Matching aprox -----------------------
+table(dades_match$numControls) 
 descrTable(formula_vector(llistaPS,y="event"),data=dades_match)
 # extreure_OR("event~sexe+any_naix",dades=dades_match,conditional = T,strata="caseid")
+
 
 # 6. Agregar variables en data index -----------------------
 
@@ -370,26 +376,19 @@ BDTOTAL<-dades_match %>%
 gc()
 
 # 6.3.2. Guardar N's per cada grup 
-dades_flow<-tibble::tibble(x=1:4,
-                            tipus=c("Control","Cas","Control","Cas"),
-                            etiqueta=c("Inicial","Inicial","Post_Match","Post_Match"),
-                            N=c(table(PACIENTS$event) %>% as.vector(),table(BDTOTAL$event) %>% as.vector()))
+Nexc_pos_match<-table(PACIENTS$event) %>% as.vector()-table(BDTOTAL$event) %>% as.vector()
 
-# N_casos0<-PACIENTS %>% filter(event==1) %>% count() %>% as.numeric()
-# N_controls0<-PACIENTS %>% filter(event==0) %>% count() %>% as.numeric()
-# N_casosf<-dades_match %>% filter(event==1) %>% count() %>% as.numeric()
-# N_controlsf<-dades_match %>% filter(event==0) %>% count() %>% as.numeric()
-# N_casos_0controls<-dades_match %>% filter(numControls==0) %>% count() %>% as.numeric()
-# dades_flow<-tibble::tibble(x=1:6,
-#                            nom=c("N_cas","N_control","N_cas_f","N_control_f","N_cas_exclos","NA"),
-#                            grup=c("cas","control","cas","control","cas","Control"),
-#                            N=c(N_casos0,N_controls0,N_casosf,N_controlsf,N_casos_0controls,NA),
-#                            lab=c("Potenciales casos","Potenciales controles","Casos","Controles","Casos exclosos sense control","Exclosos"))
+dades_flow<-tibble::tibble(x=1:6,
+                            grup=rep(c("Control","Cas"),3),
+                            tipo=c(rep("pob",4),"exc","exc"),
+                            etiqueta=c("Inicial","Inicial","Post_Match","Post_Match","Not Matching","Not Matching"),
+                            N=c(table(PACIENTS$event) %>% as.vector(),table(BDTOTAL$event) %>% as.vector(),Nexc_pos_match))
+
 
 # 6.3. Netejar bases de dades ------------------
 
 rm(list=c("PROBLEMES_total","problemes_bd","problemesDG2_bd","problemes_ANT1_3a","problemesEVPR_bd","problemesEVAM_bd","problemesEVSC_bd","problemesEVTR_bd",
-          "dt","PACIENTS","dates_casos"))
+          "dt","PACIENTS"))
 
 # 6.4. Agregar Variables ---------------
 VARIABLES<-Nmostra %>% LLEGIR.VARIABLES %>% select(idp,cod,val,dat) 

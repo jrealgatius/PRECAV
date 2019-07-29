@@ -242,7 +242,7 @@ dades<-recodificar(dades,taulavariables = conductor_variables,criteris = "recode
 
 ```
 
-# 3. Criteris d'inclusió
+# 3. Criteris d'inclusió / dades per flow-chart
 
 * Casos sense control
 * Edad entre 35 y 75 anys)   
@@ -251,53 +251,55 @@ dades<-recodificar(dades,taulavariables = conductor_variables,criteris = "recode
 ```{r filtratje, eval=T}
 # Dades flow-chart
 
-# Aplicar filtre 0: Nombre mínim de controls per cas
-Nmin_Crl_Cas<-1 # Nombre mínim de controls per cas 
-Freq_Exc0<-table(dades$numControls>=Nmin_Crl_Cas)[1] %>% as.numeric()
-# Afegir a dades_flow
-dades_flow<-add_row(dades_flow,x=c(5,6),tipus=c("Control","Cas"),etiqueta=c("Not Controls matched","Not Controls matched"),N=c(0,Freq_Exc0))
-# Filtre
-dades<-dades %>% filter(numControls>=Nmin_Crl_Cas)
+table(dades$numControls)
+# Aplicar filtre 0: Nombre mínim de controls per cas (r:1:4)
+Nmin_Crl_Cas<-0 # Nombre mínim de controls per cas 
+#
+Freq_Exc0<-table(dades$numControls>Nmin_Crl_Cas)[1] %>% as.numeric()
+NExc_match<-table(dades$event,dades$numControls)[,as.character(Nmin_Crl_Cas)] %>% as.vector()
 
-# Actualitzar exclusio postmatch
-excl_postM<-dades_flow %>% filter(etiqueta=="Inicial") %>% pull(N)-dades_flow %>% filter(etiqueta=="Post_Match") %>% pull(N)
-dades_flow<-add_row(dades_flow,x=c(7,8),tipus=c("Control","Cas"),etiqueta=c("Not matching","Not matching"),N=excl_postM)
+# Actualitzar NExc_match
+NExc_match<-dades_flow %>% filter(etiqueta=="Not Matching") %>% pull(N)+NExc_match
+dades_flow<-dades_flow %>% filter(etiqueta!="Not Matching")
+dades_flow<-add_row(dades_flow,x=c(5,6),grup=c("Control","Cas"),tipo=c("exc","exc"),etiqueta=c("Not matched","Not matched"),N=NExc_match)
+# Filtre
+dades<-dades %>% filter(numControls>Nmin_Crl_Cas)
+
 
 # Aplicar filtre I (Per rang d'edat)
 Freq_pre_exc1<-table(dades$event) %>% as.vector()
 dades<-dades %>% filter(edat>=35 & edat<75)
 Freq_post_exc1<-table(dades$event) %>% as.vector()
 
-dades_flow<-add_row(dades_flow,x=c(7,8),tipus=c("Control","Cas"),etiqueta=c("Fuera rango","Fuera de rango(35-75)"),N=Freq_pre_exc1-Freq_post_exc1)
-
+dades_flow<-add_row(dades_flow,x=c(7,8),grup=c("Control","Cas"),tipo=c("exc","exc"),etiqueta=c("Fuera rango","Fuera de rango(35-75)"),N=Freq_pre_exc1-Freq_post_exc1)
 
 # Aplicar filtre II (Per E10)
 temp<-dades %>% filter(DG.E10==1) 
 Freq_exc<-table(temp$event) %>% as.vector()
 dades<-dades %>% filter(DG.E10==0)
 # Actualitzar dades flow chart
-dades_flow<-add_row(dades_flow,x=c(9,10),tipus=c("Control","Cas"),etiqueta=c("DM1","DM1"),N=Freq_exc2)
+dades_flow<-add_row(dades_flow,x=c(9,10),grup=c("Control","Cas"),tipo=c("exc","exc"),etiqueta=c("DM1","DM1"),N=Freq_exc)
 
-# Aplicar filtre II (Per E10)
+# Aplicar filtre II (Per FA)
 temp<-dades %>% filter(DG.FA==1) 
 Freq_exc<-table(temp$event) %>% as.vector()
 dades<-dades %>% filter(DG.FA==0)
 # Actualitzar dades flow chart
-dades_flow<-add_row(dades_flow,x=c(9,10),tipus=c("Control","Cas"),etiqueta=c("FA","FA"),N=Freq_exc)
+dades_flow<-add_row(dades_flow,x=c(11,12),grup=c("Control","Cas"),tipo=c("exc","exc"),etiqueta=c("FA","FA"),N=Freq_exc)
 
 # Actualitzar dades finals flowchart
-dades_flow<-add_row(dades_flow,x=c(11,12),tipus=c("Control","Cas"),etiqueta=c("Final","Final"),N=table(dades$event) %>% as.vector())
+dades_flow<-add_row(dades_flow,x=c(11,12),grup=c("Control","Cas"),tipo=c('pob','pob'),etiqueta=c("Final","Final"),N=table(dades$event) %>% as.vector())
 
 # Verificació de filtres i salvar base d'events
+
 events_dt <-dades %>% filter(event==1) 
 events_dt %>% skimr::skim(edat)
 
 ```
 
-
+# 4. Generar Flow-chart
 
 ```{r flow}
-
 # Generar Flow_chart 
 
 # Configuro parametres del flowchart
@@ -306,17 +308,19 @@ pob_lab1<-c("Potenciales controles","Controles")
 pob_lab2=c("Potenciales casos","Casos")
 
 # N inicial
-
 Ninicial<-dades_flow %>% filter(etiqueta=="Inicial") %>% pull(N) %>% sum()
 
-NControls_inicial_final<-dades_flow %>% filter(tipus=="Control" & (etiqueta=="Inicial" | etiqueta=="Final")) %>% pull(N) 
-NCas_inicial_final<-dades_flow %>% filter(tipus=="Cas" & (etiqueta=="Inicial" | etiqueta=="Final")) %>% pull(N) 
+# N inicial final per grup
+NControls_inicial_final<-dades_flow %>% filter(grup=="Control" & (etiqueta=="Inicial" | etiqueta=="Final")) %>% pull(N) 
+NCas_inicial_final<-dades_flow %>% filter(grup=="Cas" & (etiqueta=="Inicial" | etiqueta=="Final")) %>% pull(N) 
 
-Nexcl_controls<-dades_flow %>% filter(tipus=="Control" & etiqueta!="Inicial" & etiqueta!="Final" & etiqueta!="Post_Match") %>% pull(N) 
-Labexcl_controls<-dades_flow %>% filter(tipus=="Control" & etiqueta!="Inicial" & etiqueta!="Final" & etiqueta!="Post_Match") %>% pull(etiqueta) 
+# Exclusions controls
+Nexcl_controls<-dades_flow %>% filter(grup=="Control" & tipo=="exc") %>% pull(N) 
+Labexcl_controls<-dades_flow %>% filter(grup=="Control" & tipo=="exc") %>% pull(etiqueta) 
 
-Nexcl_cas<-dades_flow %>% filter(tipus=="Cas" & etiqueta!="Inicial" & etiqueta!="Final" & etiqueta!="Post_Match") %>% pull(N) 
-Labexcl_cas<-dades_flow %>% filter(tipus=="Cas" & etiqueta!="Inicial" & etiqueta!="Final" & etiqueta!="Post_Match") %>% pull(etiqueta) 
+# Exclusions cas
+Nexcl_cas<-dades_flow %>% filter(grup=="Cas" & tipo=="exc") %>% pull(N) 
+Labexcl_cas<-dades_flow %>% filter(grup=="Cas" & tipo=="exc") %>% pull(etiqueta) 
 
 
 flow_chart<-diagramaFlowchart2G(pob_lab=pob_lab,
@@ -329,22 +333,12 @@ flow_chart<-diagramaFlowchart2G(pob_lab=pob_lab,
                                 
                                 exc1=Nexcl_controls,
                                 exc_lab1=Labexcl_controls,
-                                
-                                
                                 exc2=Nexcl_cas,
                                 exc_lab2=Labexcl_cas)
 
-
-# Dades flow-chart
-n_controls_final<-table(dades$event)[1]
-n_casos_final<-table(dades$event)[2]
-
-n_controls_exc2<-n_controls_inicial-n_controls_final
-n_casos_exc2<-n_casos_inicial-n_casos_final
-
+flow_chart
 
 ```
-
 
 
 
@@ -366,54 +360,8 @@ dades<-etiquetar(d=dades,taulavariables = conductor_variables)
 
 ```
 
-# 5. Generar Flow-chart
 
-```{r flow_chart, eval=T, include=T}
-# Extrec dades de flow chart pre i post maatching 
-N_casos<-dades_flow %>% filter(nom=="N_cas") %>% select(N) %>% as.numeric()
-N_controls<-dades_flow %>% filter(nom=="N_control") %>% select(N) %>% as.numeric()
-LAB_casos<-dades_flow %>% filter(nom=="N_cas") %>% select(lab) %>% as.character()
-LAB_controls<-dades_flow %>% filter(nom=="N_control") %>% select(lab) %>% as.character()
 
-Nf_casos<-dades_flow %>% filter(nom=="N_cas_f") %>% select(N) %>% as.numeric()
-Nf_controls<-dades_flow %>% filter(nom=="N_control_f") %>% select(N) %>% as.numeric()
-
-# Excloc els de fora de rang en N finals
-Nfinal_casos=Nf_casos-n_casos_exc2
-Nfinal_controls=Nf_controls-n_controls_exc2
-
-# Labels
-LABf_casos<-dades_flow %>% filter(nom=="N_cas_f") %>% select(lab) %>% as.character()
-LABf_controls<-dades_flow %>% filter(nom=="N_control_f") %>% select(lab) %>% as.character()
-
-# Configuro parametres del flowchart
-pob_lab<-"Población inicial (8%)"
-pob_lab1<-c("Potenciales controles","Controles")
-pob_lab2=c("Potenciales casos","Casos")
-pob<-N_casos+N_controls
-
-pob1<-c(N_controls,Nfinal_controls)
-exc1<-c(Nf_controls-N_controls, n_controls_exc2)
-exc_lab1<-c('Not matching','Fuera rango edad')
-
-pob2<-c(N_casos,Nfinal_casos)
-exc2<-c(N_casos-Nf_casos,n_casos_exc2)
-exc_lab2<-c("Not matching","Fuera rango edad(35-75)")
-
-flow_chart<-diagramaFlowchart2G(pob_lab=pob_lab,
-                                pob=N_casos+N_controls,
-                                pob_lab1=pob_lab1,
-                                pob_lab2=pob_lab2,
-                                pob1=pob1,
-                                exc1=exc1,
-                                exc_lab1=exc_lab1,
-                                pob2=pob2,
-                                exc2=exc2,
-                                exc_lab2=exc_lab2)
-
-flow_chart
-
-```
 
 # 6. Analisis preliminar  
 
