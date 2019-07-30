@@ -25,7 +25,7 @@ library(kableExtra)
 
 ```{r import}
 
-load("output/R_data/output_PRECAV.Rdata")
+load("output/R_data/output_PRECAV_v2.Rdata")
 
 ```
 
@@ -50,15 +50,23 @@ Determinar el perfil de riesgo (estimado mediante la ecuación REGICOR) antes de
 # Análisis exploratario PRELIMINAR. 
 
 - Muestra inicial de aprox un 8% (N=400000 random) de la base poblacional (N=5 400 000) por motivos computacionales
-- Post aplicación de criterios de inclusión + matching = 7599 casos y 23705 controles (r=1:4)
+- Post aplicación de criterios de inclusión + matching = ```{r, dim(dades)[1]} casos y controles (r=1:4 aproximada)
 
 ## Actualizado: 
 
-&check; Encontrado fallo del bajo registro de los Anti HTA 
-&check; Reanalizado con datos de facturaciones i prescripciones anti-HTA
+&check; Generada variable LDLbajo / LdLalto <br/>
+&check; Eliminados casos no matcheados
+&check; Arreglado algoritmo usando RisksetMatch() busqueda de controles última versión paquete heaven
+&check; Generado algoritmo de control de versiones de paquete heaven de R (previsión de formateo IT)
+&check; Aplicado criterio de exclusión DM1 + FA 
+&check; Rehecho flow-chart segun nuevos criterios de inclusión
+&check; Actualización tablas con nueva base de datos
+&check; Nuevas tablas segun objetivos estratificadas por edad y sexo
 
 ## Realizado:
 
+&check; Encontrado fallo del bajo registro de los Anti HTA 
+&check; Reanalizado con datos de facturaciones i prescripciones anti-HTA
 &check; Calculada la variable FHF (fenotipo hipercolesterolemia familiar) <br />
 &check; Generada variable HTA (Que incluye complicacionaes y otras HTA) <br />
 &check; Analisis con categorias Regicor (OR's + Curva ROC) <br />
@@ -71,7 +79,7 @@ Determinar el perfil de riesgo (estimado mediante la ecuación REGICOR) antes de
 ### Pendiente:
 
 * Reajuste por variables determinates potencialmente confusoras (Visitas previas etc..)
-* Recodificaciones y cálculos
+* +Recodificaciones y cálculos
 * Análisis de sensibilidad con valores faltantes (MIA /categoria missing....)
 * Valdiación estadística completa de los modelos según criterios estadísticos
 * Mover ventana temporal para evitar contaminación y evaluar evolución
@@ -88,6 +96,46 @@ Determinar el perfil de riesgo (estimado mediante la ecuación REGICOR) antes de
 flow_chart
 
 ```
+
+## Analisis por objetivos
+
+# Principal: 
+
+- Determinar el perfil de riesgo (estimado mediante la ecuación REGICOR) antes del primer evento cardiovascular prematuro (edad igual o inferior a 55 en hombres y 65 años en mujeres) en comparación con población que no ha sufrido ningún evento de la misma edad y sexo, atendida en Atención Primaria en Catalunya en 2009 y con un periodo de observación de 2010 a 2016. 
+
+>> Operativo: >> Descriptiva y estimación de associación estadística (OR) de punutación del regicor y ser caso en població joven
+
+```{r, message=FALSE, warning=FALSE, include=T, echo=FALSE,size="huge"}
+
+export2md(Taula1,caption = "Estimación de REGICOR entre casos y controles")
+export2md(Taula1.2,caption = "Estimación de REGICOR entre casos y controles estratificado por genero")
+
+# OR i sig Global
+M1.reg.alon_conti.ls$taula_OR %>% kable(digits = 3,caption = "Global") %>% kableExtra::kable_styling()
+M1.reg.alon.ls$taula_OR %>% kable(digits = 3) %>% kableExtra::kable_styling()
+M1.reg.mis.ls$taula_OR %>% kable(digits = 3) %>% kableExtra::kable_styling()
+M1.reg.alon.ls$forest_plot
+M1.reg.alon_conti.ls$ggplot_ROC
+print(M1.reg.alon_conti.ls$auc)
+
+# OR i sig estrat: Homes
+M1.reg.alon_conti.ls.H$taula_OR %>% kable(digits = 3,caption = "Varones") %>% kableExtra::kable_styling()
+M1.reg.alon.ls.H$taula_OR %>% kable(digits = 3) %>% kableExtra::kable_styling()
+M1.reg.mis.ls.H$taula_OR %>% kable(digits = 3) %>% kableExtra::kable_styling()
+M1.reg.alon.ls.H$forest_plot
+
+# OR i sig estrat: Dones
+M1.reg.alon_conti.ls.D$taula_OR %>% kable(digits = 3,caption = "Mujeres") %>% kableExtra::kable_styling()
+M1.reg.alon.ls.D$taula_OR %>% kable(digits = 3) %>% kableExtra::kable_styling()
+M1.reg.mis.ls.D$taula_OR %>% kable(digits = 3) %>% kableExtra::kable_styling()
+M1.reg.alon.ls.D$forest_plot
+
+
+```
+
+
+
+# 2.Análisis exploratorio actualizado
 
 ## 1. Características de los eventos CV detectados en el periodo de estudio (2010-2016)
 
@@ -116,7 +164,6 @@ export2md(T2.ANTECEDENTS, caption = "Antecedentes de diagnóstico")
 export2md(T2.FARMACS, caption = "Fármacos prescritos / dispensados 1 año previo")
 
 export2md(T2.VALORS, caption = "Determinaciones de 1-3 años previas")
-
 
 ```
 
