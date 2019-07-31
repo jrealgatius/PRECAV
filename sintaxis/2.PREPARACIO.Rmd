@@ -221,9 +221,16 @@ dades<-dades %>% mutate(regicor_cat=case_when(
   regicor>=14.51 ~4)) 
 
 # regicor_mis 
-dades<-dades %>% mutate(regicor_mis=ifelse(is.na(regicor),"Missing","Any value"))
+dades<-dades %>% mutate(regicor_mis=ifelse(is.na(regicor),"Missing","Value"))
 # Factoritzo
 dades$regicor_mis<-as.factor(dades$regicor_mis)
+
+
+# Recodes to missings llista de vars 
+llista_vars<-c("COLHDL.valor13a","COLTOT.valor13a","PAD.valor13a","PAS.valor13a","tab.valor")
+temp_dt<-dades %>% select(llista_vars) %>% mutate_all(~if_else(is.na(.) | .==0,"Missing","Value")) 
+colnames(temp_dt)<-paste0(llista_vars,".mis")
+dades<-dades %>% cbind(temp_dt) %>% as_tibble()
 
 
 # FHF_cat (fenotipo hipercolesterolemia familiar) -----
@@ -259,6 +266,7 @@ dades<- dades %>%
 # Recodes
 
 dades<-recodificar(dades,taulavariables = conductor_variables,criteris = "recodes")
+
 
 
 ```
@@ -409,14 +417,24 @@ formula<-formula_compare(x="events_imp",y="sexe",taulavariables = conductor_vari
 T1.3.EVENTS<-descrTable(formula,data=dadesevents,show.p.overall = F,hide.no = "No",show.all = T)
 
 # Prematur (Si/No)
+formula<-formula_compare(x="events",y="edat_grup",taulavariables = conductor_variables) 
+T1.EVENTS.2<-descrTable(formula,data=dadesevents,show.p.overall = F,hide.no = "No",show.all = T)
+
+formula<-formula_compare(x="events_ter",y="edat_grup",taulavariables = conductor_variables) 
+T1.2.EVENTS.2<-descrTable(formula,data=dadesevents,show.p.overall = F,hide.no = "No",show.all = T)
+
+formula<-formula_compare(x="events_imp",y="edat_grup",taulavariables = conductor_variables) 
+T1.3.EVENTS.2<-descrTable(formula,data=dadesevents,show.p.overall = F,hide.no = "No",show.all = T)
+
+# Prematur (Si/No) + Sexe
 formula<-formula_compare(x="events",y="edat_pre",taulavariables = conductor_variables) 
-T1.4.EVENTS<-descrTable(formula,data=dadesevents,show.p.overall = F,hide.no = "No",show.all = T)
+T1.EVENTS.3<-descrTable(formula,data=dadesevents,show.p.overall = F,hide.no = "No",show.all = F)
 
 formula<-formula_compare(x="events_ter",y="edat_pre",taulavariables = conductor_variables) 
-T1.5.EVENTS.2<-descrTable(formula,data=dadesevents,show.p.overall = F,hide.no = "No",show.all = T)
+T1.2.EVENTS.3<-descrTable(formula,data=dadesevents,show.p.overall = F,hide.no = "No",show.all = F)
 
 formula<-formula_compare(x="events_imp",y="edat_pre",taulavariables = conductor_variables) 
-T1.6.EVENTS<-descrTable(formula,data=dadesevents,show.p.overall = F,hide.no = "No",show.all = T)
+T1.3.EVENTS.3<-descrTable(formula,data=dadesevents,show.p.overall = F,hide.no = "No",show.all = F)
 
 # Per tres grups d'edat
 formula<-formula_compare(x="events",y="edat.cat5",taulavariables = conductor_variables) 
@@ -443,33 +461,43 @@ T1.BASELINE<-descrTable(formula,data=dadesevents,show.p.overall = F,hide.no = "N
 
 ```{r comparativa, include=F, eval=F}
 # Tecnica per no arrossegar tota la base de dades
+formula<-formula_compare(x="baseline",y="event",taulavariables = conductor_variables) 
+dades_temp<-dades %>% select(extreure.variables("baseline",conductor_variables),"event","edat_grup")
+T2.BASELINE<-descrTable(formula,data=dades_temp,show.p.overall = F,hide.no = "No",show.all = F,show.n = T)
+
+dades_temp<-dades %>% select(extreure.variables("baseline",conductor_variables),"event","edat_grup") %>% filter(edat_grup=="Young:M<55/F<65")
+T2.BASELINE.joves<-descrTable(formula,data=dades_temp,show.p.overall = F,hide.no = "No",show.all = F,show.n = T)
+
 formula<-formula_compare(x="events",y="event",taulavariables = conductor_variables) 
-dades_temp<-dades %>% select(extreure.variables("events",conductor_variables),"event")
+dades_temp<-dades %>% select(extreure.variables("events",conductor_variables),"event","edat_grup")
 T2.EVENTS<-descrTable(formula,data=dades_temp,show.p.overall = F,hide.no = "No")
 
 formula<-formula_compare(x="farmacs_previs",y="event",taulavariables = conductor_variables) 
-dades_temp<-dades %>% select(extreure.variables("farmacs_previs",conductor_variables),"event")
+dades_temp<-dades %>% select(extreure.variables("farmacs_previs",conductor_variables),"event","edat_grup")
 T2.FARMACS<-descrTable(formula,data=dades_temp,show.p.overall = F,hide.no = "No")
 
 formula<-formula_compare(x="farmacs",y="event",taulavariables = conductor_variables) 
-dades_temp<-dades %>% select(extreure.variables("farmacs",conductor_variables),"event")
+dades_temp<-dades %>% select(extreure.variables("farmacs",conductor_variables),"event","edat_grup")
 T2.FARMACS_ACTUALS<-descrTable(formula,data=dades_temp,show.p.overall = F,hide.no = "No")
 
+dades_temp<-dades %>% select(extreure.variables("farmacs",conductor_variables),"event","edat_grup") %>% filter(edat_grup=="Young:M<55/F<65")
+T2.FARMACS_ACTUALS.joves<-descrTable(formula,data=dades_temp,show.p.overall = F,hide.no = "No") 
+
 formula<-formula_compare(x="antecedents_previs",y="event",taulavariables = conductor_variables) 
-dades_temp<-dades %>% select(extreure.variables("antecedents_previs",conductor_variables),"event")
+dades_temp<-dades %>% select(extreure.variables("antecedents_previs",conductor_variables),"event","edat_grup")
 T2.ANTECEDENTS<-descrTable(formula,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = T)
 
 formula<-formula_compare(x="valors_previs",y="event",taulavariables = conductor_variables) 
-dades_temp<-dades %>% select(extreure.variables("valors_previs",conductor_variables),"event")
+dades_temp<-dades %>% select(extreure.variables("valors_previs",conductor_variables),"event","edat_grup")
 T2.VALORS<-descrTable(formula,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = T)
 
 formula<-formula_compare(x="regicor",y="event",taulavariables = conductor_variables) 
-dades_temp<-dades %>% select(extreure.variables("regicor",conductor_variables),"event")
+dades_temp<-dades %>% select(extreure.variables("regicor",conductor_variables),"event","edat_grup")
 T2.regicor<-descrTable(formula,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = T,show.ratio = T)
 
 # Per grup d'edad i genere
 formula<-formula_compare(x="regicor",y="event",taulavariables = conductor_variables) 
-dades_temp<-dades %>% select(extreure.variables("regicor",conductor_variables),"event")
+dades_temp<-dades %>% select(extreure.variables("regicor",conductor_variables),"event","edat_grup")
 T2.regicor<-descrTable(formula,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = T,show.ratio = T)
 
 
@@ -510,24 +538,19 @@ M1.reg.alon.ls<-extreure_model_logistic(x="regicor_alone",y="event",taulavariabl
 M1.reg.mis.ls<-extreure_model_logistic(x="regicor_mis",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=1,conditional = T,strata = "caseid")
 
 
-# OR i sig Global
-M1.reg.alon_conti.ls$taula_OR %>% kable(digits = 3,caption = "Global") %>% kableExtra::kable_styling()
-M1.reg.alon.ls$taula_OR %>% kable(digits = 3) %>% kableExtra::kable_styling()
-M1.reg.mis.ls$taula_OR %>% kable(digits = 3) %>% kableExtra::kable_styling()
-
 # Descriptiu primari per sexe 
-# Homes 
+# Homes Joves
 dades_temp<-dades %>% filter(sexe=="H" & edat_grup=="Young:M<55/F<65") 
 M1.reg.alon_conti.ls.H<-extreure_model_logistic(x="regicor_alone_continu",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=1,conditional = T,strata = "caseid")
 M1.reg.alon.ls.H<-extreure_model_logistic(x="regicor_alone",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=1,conditional = T,strata = "caseid")
 M1.reg.mis.ls.H<-extreure_model_logistic(x="regicor_mis",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=1,conditional = T,strata = "caseid")
 
-# Dones 
+# Dones Joves
 dades_temp<-dades %>% filter(sexe=="D" & edat_grup=="Young:M<55/F<65") 
-Taula1.D<-descrTable(formula,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = T,show.ratio = F)
 M1.reg.alon_conti.ls.D<-extreure_model_logistic(x="regicor_alone_continu",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=1,conditional = T,strata = "caseid")
 M1.reg.alon.ls.D<-extreure_model_logistic(x="regicor_alone",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=1,conditional = T,strata = "caseid")
 M1.reg.mis.ls.D<-extreure_model_logistic(x="regicor_mis",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=1,conditional = T,strata = "caseid")
+
 
 
 ```
@@ -537,12 +560,10 @@ M1.reg.mis.ls.D<-extreure_model_logistic(x="regicor_mis",y="event",taulavariable
 >> Métode: Models Logistics condicionals de: Regicor / variables incloses en Regicor / Variables regicor + farmacs 
 
 
-```{r}
+```{r regicor_plus}
 
-
-
-M2.reg.vars.ls<-extreure_model_logistic(x="regicor_vars",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=1,conditional = T,strata = "caseid")
-M3.reg.plus.ls<-extreure_model_logistic(x="regicor_plus",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=1,conditional = T,strata = "caseid")
+M2.reg.vars.ls<-extreure_model_logistic(x="regicor_vars",y="event",taulavariables=conductor_variables,dades=dades,valor_outcome=1,conditional = T,strata = "caseid")
+M3.reg.plus.ls<-extreure_model_logistic(x="regicor_plus",y="event",taulavariables=conductor_variables,dades=dades,valor_outcome=1,conditional = T,strata = "caseid")
 
 ```
 
@@ -582,6 +603,155 @@ dades_temp<-dades %>% filter(edat_grup=="Old:M>=55/F>=65")
 M1.reg.alon.G2.ls<-extreure_model_logistic(x="regicor_alone",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=1,conditional = T,strata = "caseid")
 M2.reg.vars.G2.ls<-extreure_model_logistic(x="regicor_vars",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=1,conditional = T,strata = "caseid")
 M3.reg.plus.G2.ls<-extreure_model_logistic(x="regicor_plus",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=1,conditional = T,strata = "caseid")
+
+
+```
+
+Conocer el porcentaje de personas que desarrollan el primer evento cardiovascular prematuro (< 55/65 años) de los que no se dispone de información clínica previa necesaria para para evaluar su riesgo cardiovascular mediante la ecuación REGICOR en los 5 años previos al mismo
+
+```{r secundari2 }
+# Seleccionar població amb Esdeveniment població prematura i fer una descriptiva de les variables incloses en el Regicor
+
+dades_temp<-dades %>% filter(event==1 & edat_grup=="Young:M<55/F<65") %>%
+  select(extreure.variables("regicor_vars_mis",conductor_variables),"event","edat_pre","sexe")
+formula<-formula_compare(x="regicor_vars_mis",y="sexe",taulavariables = conductor_variables) 
+taula_REGICOR_events_joves<-descrTable(formula,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = T,show.ratio = F,show.all = T)
+
+taula_REGICOR_events_joves
+
+
+dades_temp<-dades %>% filter(event==0 & edat_grup=="Young:M<55/F<65") %>%
+  select(extreure.variables("regicor_vars_mis",conductor_variables),"event","edat_pre","sexe")
+formula<-formula_compare(x="regicor_vars_mis",y="sexe",taulavariables = conductor_variables) 
+taula_REGICOR_controls_joves<-descrTable(formula,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = T,show.ratio = F,show.all = T)
+
+taula_REGICOR_controls_joves
+
+
+dades_temp<-dades %>% filter(event==1) %>%
+  select(extreure.variables("regicor_vars_mis",conductor_variables),"event","edat_pre","sexe")
+formula<-formula_compare(x="regicor_vars_mis",y="edat_pre",taulavariables = conductor_variables) 
+taula_REGICOR_events_grups<-descrTable(formula,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = T,show.ratio = F,show.all = T)
+
+taula_REGICOR_events_grups
+
+dades_temp<-dades %>% filter(event==0) %>%
+  select(extreure.variables("regicor_vars_mis",conductor_variables),"event","edat_pre","sexe")
+formula<-formula_compare(x="regicor_vars_mis",y="edat_pre",taulavariables = conductor_variables) 
+taula_REGICOR_controls_grups<-descrTable(formula,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = T,show.ratio = F,show.all = T)
+
+taula_REGICOR_controls_grups
+
+
+
+```
+
+```{r secundari3}
+
+# Regicor per grups d'edad i sexe casos i controls
+
+formula<-formula_compare(x="taula1",y="event",taulavariables = conductor_variables) 
+dades_temp<-dades %>% 
+  select(extreure.variables("taula1",conductor_variables),"event","sexe","edat_pre")
+
+Taula3<-descrTable(event~.-sexe-edat_pre,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = T,show.ratio = F)
+Taula3.2<-strataTable(Taula3,"sexe")
+Taula3.3<-strataTable(Taula3,"edat_pre")
+
+
+```
+
+>> Objetivo secundario 4
+
+```{r secundario4}
+formula<-formula_compare(x="regicor_vars",y="event",taulavariables = conductor_variables) 
+
+# Població jove
+dades_temp<-dades %>% filter(edat_grup=="Young:M<55/F<65") %>% 
+  select(extreure.variables("regicor_vars",conductor_variables),"event","sexe","edat_pre")
+taula4<-descrTable(event~.-sexe-edat_pre,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = T,show.ratio = F)
+taula4.1<-strataTable(taula4,"sexe")
+
+# ORs
+kable(M2.reg.vars.G1.ls$taula_OR,digits = 3) %>% kableExtra::kable_styling()
+
+print(M2.reg.vars.G1.ls$auc)
+M2.reg.vars.G1.ls$forest_plot
+M2.reg.vars.G1.ls$ggplot_ROC
+M2.reg.vars.G1.ls$auc_ci
+
+
+# Población general
+dades_temp<-dades  %>% 
+  select(extreure.variables("regicor_vars",conductor_variables),"event","sexe","edat_pre")
+taula4.3<-descrTable(event~.-sexe-edat_pre,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = T,show.ratio = F)
+taula4.4<-strataTable(taula4.3,"edat_pre")
+
+# OR's 
+kable(M2.reg.vars.G2.ls$taula_OR,digits = 3,caption="OR por componente de REGICOR población mayor") %>% kableExtra::kable_styling()
+print(M2.reg.vars.G2.ls$auc)
+M2.reg.vars.G2.ls$forest_plot
+M2.reg.vars.G2.ls$ggplot_ROC
+M2.reg.vars.G2.ls$auc_ci
+
+
+
+```
+
+>> Objetivo secundario 5
+
+```{r secundario5}
+formula<-formula_compare(x="regicor_plus",y="event",taulavariables = conductor_variables) 
+
+# Població jove
+dades_temp<-dades %>% filter(edat_grup=="Young:M<55/F<65") %>% 
+  select(extreure.variables("regicor_plus",conductor_variables),"event","sexe","edat_pre")
+taula5<-descrTable(event~.-sexe-edat_pre,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = T,show.ratio = F)
+taula5.1<-strataTable(taula5,"sexe")
+
+# OR's 
+kable(M3.reg.plus.G1.ls$taula_OR,digits = 3,caption="OR por componente de REGICOR población mayor") %>% kableExtra::kable_styling()
+print(M3.reg.plus.G1.ls$auc)
+M3.reg.plus.G1.ls$forest_plot
+M3.reg.plus.G1.ls$ggplot_ROC
+M3.reg.plus.G1.ls$auc_ci
+
+# Población general
+dades_temp<-dades  %>% 
+  select(extreure.variables("regicor_vars",conductor_variables),"event","sexe","edat_pre")
+taula5.2<-descrTable(event~.-sexe-edat_pre,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = T,show.ratio = F)
+taula5.3<-strataTable(taula5.2,"edat_pre")
+
+
+# OR's població gran
+kable(M3.reg.plus.G2.ls$taula_OR,digits = 3,caption="OR por componente de REGICOR población mayor") %>% kableExtra::kable_styling()
+print(M3.reg.plus.G2.ls$auc)
+M3.reg.plus.G2.ls$forest_plot
+M3.reg.plus.G2.ls$ggplot_ROC
+M3.reg.plus.G2.ls$auc_ci
+
+
+
+```
+
+>> Objetivo secundario 6
+
+```{r secundario6}
+formula<-formula_compare(x="taula6",y="event",taulavariables = conductor_variables) 
+
+# Població jove
+dades_temp<-dades %>% filter(edat_grup=="Young:M<55/F<65") %>% 
+  select(extreure.variables("taula6",conductor_variables),"event","sexe","edat_pre")
+taula6<-descrTable(event~.-sexe-edat_pre,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = T,show.ratio = F)
+taula6.1<-strataTable(taula6,"sexe")
+
+
+# Población general
+dades_temp<-dades  %>% 
+  select(extreure.variables("taula6",conductor_variables),"event","sexe","edat_pre")
+taula6.2<-descrTable(event~.-sexe-edat_pre,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = T,show.ratio = F)
+taula6.3<-strataTable(taula6.2,"edat_pre")
+
 
 
 ```

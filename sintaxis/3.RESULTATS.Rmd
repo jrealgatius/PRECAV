@@ -1,0 +1,373 @@
+---
+title: 'PRECAV: Caracterización del riesgo cardiovascular a una edad prematura
+  en Cataluña'
+author: "Jordi Real"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  word_document: default
+  
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
+
+knitr::opts_knit$set(root.dir = normalizePath('../'))
+
+# Càrrega de libreries 
+library(compareGroups)
+library(dplyr)
+library(kableExtra)
+
+```
+
+
+```{r import}
+
+load("output/R_data/output_PRECAV_v2.Rdata")
+
+```
+
+## Objectives and Hypotheses: 
+
+# OBJETIVOS
+
+## Principal:
+Determinar el perfil de riesgo (estimado mediante la ecuación REGICOR) antes del primer evento cardiovascular prematuro (edad igual o inferior a 55 en hombres y 65 años en mujeres) en comparación con población que no ha sufrido ningún evento de la misma edad y sexo, atendida en Atención Primaria en Catalunya en 2009 y con un periodo de observación de 2010 a 2016. 
+
+## Secundarios: 
+
+1. Conocer el porcentaje de primeros eventos cardiovasculares que ocurren a edad prematura en nuestra población. 
+2. Conocer el porcentaje de personas que desarrollan el primer evento cardiovascular prematuro (< 55/65 años) de los que no se dispone de información clínica previa necesaria para para evaluar su riesgo cardiovascular mediante la ecuación REGICOR en los 5 años previos al mismo. 
+3. Comparar las diferencias observadas en el objetivo principal con las de los pacientes de las categorías de edad superior (mujeres 65-70 y 70-75, hombres: 55-65 y 65-75años).
+4. Evaluar los componentes de la ecuación REGICOR, incluyendo además el grado de control glucémico y el tratamiento farmacológico antidiabético, antihipertensivo, hipolipemiante y antiagregante antes del desarrollo del primer evento cardiovascular prematuro (< 55/65 años) y compararlos con el grupo de pacientes de la misma edad que NO padecen su primer evento cardiovascular durante el periodo de observación 2010-2016. Realizar la misma aproximación para las categorías de edad superior. 
+5. Identificar la presencia de FRCV no clásicos (no incluidos en la ecuación REGICOR) antes del primer evento cardiovascular prematuro (< 55/65 años) y comparar su prevalencia con la observada en pacientes de la misma edad que NO padecen su primer ECV durante el periodo de observación 2010-2016. Realizar la misma aproximación para las categorías de edad superior. 
+6. Conocer la prevalencia de situaciones clínicas de alto riesgo CV no tributarias de evaluación mediante la ecuación REGICOR (microalbuminuria, insuficiencia renal crónica, fibrilación auricular y calcificaciones o estenosis arteriales) antes del desarrollo del primer evento cardiovascular prematuro (< 55/65 años) y comparar su prevalencia con la observada en pacientes de la misma edad que NO padecen su primer ECV durante el periodo de observación 2010-2016. Realizar la misma aproximación para las categorías de edad superior.
+
+***
+
+# Análisis exploratario PRELIMINAR. 
+
+- Muestra inicial de aprox un 8% (N=400000 random) de la base poblacional (N=5 400 000) por motivos computacionales
+- Post aplicación de criterios de inclusión + matching = ```{r, dim(dades)[1]} casos y controles (r=1:4 aproximada)
+
+## Actualizado: 
+
+&check; Generada variable LDLbajo / LdLalto <br/>
+&check; Eliminados casos no matcheados <br/>
+&check; Arreglado algoritmo usando RisksetMatch() busqueda de controles última versión paquete heaven <br/>
+&check; Generado algoritmo de control de versiones de paquete heaven de R (previsión de formateo IT) <br/>
+&check; Aplicado criterio de exclusión DM1 + FA <br/>
+&check; Rehecho flow-chart segun nuevos criterios de inclusión <br/>
+&check; Actualización tablas con nueva base de datos <br/>
+&check; Nuevas tablas segun objetivos estratificadas por edad y sexo <br/>
+
+## Realizado:
+
+&check; Encontrado fallo del bajo registro de los Anti HTA <br/>
+&check; Reanalizado con datos de facturaciones i prescripciones anti-HTA <br/>
+&check; Calculada la variable FHF (fenotipo hipercolesterolemia familiar) <br />
+&check; Generada variable HTA (Que incluye complicacionaes y otras HTA) <br />
+&check; Analisis con categorias Regicor (OR's + Curva ROC) <br />
+&check; Flowchart <br />
+&check; Recalculadas estimaciones ORs y errores estandar teniendo naturaleza apareada del estudio (Logistica condicional) <br />
+&check; Recodificaciones y calculos (Regicor, IMC, HDL_bajo....) <br />
+&check; Inclusión de códigos ATC Antipertensivos según conductor modificado <br />
+&check; Eliminación de códigos repetidos en conductor <br />
+
+### Pendiente:
+
+* Reajuste de ORs por variables determinates potencialmente confusoras (Visitas previas etc..)
+* Analisis de sensibilidad con valores faltantes (MIA /categoria missing....)
+* Recodificaciones y cálculos
+* Valdiación estadística completa de los modelos según criterios estadísticos
+* Cambiar ventana temporal para evitar contaminación y evaluar evolución
+* Validación clínica
+* Redacción de informe y artículo
+
+****
+
+## 0. Flow-chart 
+
+```{r echo=FALSE, warning=FALSE, include=T, size="huge"}
+
+flow_chart
+
+```
+
+
+# 1. Descriptivo inicial de toda la población por grupos (Población total y población joven)
+
+## 1.1. Población global
+
+
+```{r descriptivo1, warning=FALSE}
+
+export2md(T2.BASELINE, caption = "Características clínicas en fecha de de detección/registro población global")
+export2md(T2.FARMACS_ACTUALS, caption = "Características clínicas en fecha de de detección/registro población global")
+
+
+```
+
+***
+
+## 1.2. Población joven (Young:M<55/F<65")
+
+```{r descriptivo2, warning=FALSE}
+
+export2md(T2.BASELINE.joves, caption = "Características clínicas en fecha de de detección/registro población joven")
+export2md(T2.FARMACS_ACTUALS.joves, caption = "Características clínicas en fecha de de detección/registro población joven")
+
+
+```
+
+
+# 2. Analisis por objetivos
+
+## Principal 
+
+- Determinar el perfil de riesgo (estimado mediante la ecuación REGICOR) antes del primer evento cardiovascular prematuro (edad igual o inferior a 55 en hombres y 65 años en mujeres) en comparación con población que no ha sufrido ningún evento de la misma edad y sexo, atendida en Atención Primaria en Catalunya en 2009 y con un periodo de observación de 2010 a 2016. 
+
+- Operativo: >> Descriptiva y estimación puntual de OR de evento CV en función de valores del regicor global y en población joven
+
+Consideraciones: 
+
+> Ventana temporal: 
+>> Determinaciones: 3 años previos: 1095 hasta 45 dias previos a la fecha 0-1 () año previo <br/>
+>> Antecedentes / Tabaquismo en fecha (45 dias previos) <br/>
+
+
+```{r }
+
+export2md(Taula1,caption = "Estimación de REGICOR entre casos y controles")
+export2md(Taula1.2,caption = "Estimación de REGICOR entre casos y controles estratificado por genero")
+
+# OR i sig Global
+M1.reg.alon_conti.ls$taula_OR %>% kable(digits = 3,caption = "Odds Ratio de evento CV por incremento unitario de REGICOR previo") %>% kableExtra::kable_styling()
+M1.reg.alon.ls$taula_OR %>% kable(digits = 3,caption = "Odds Ratio de evento CV por grupo de riesgo segun su REGICOR previo") %>% kableExtra::kable_styling()
+M1.reg.mis.ls$taula_OR %>% kable(digits = 3, caption= "Odds Ratio de evento CV por disponibilidad de REGICOR en relación a missings" ) %>% kableExtra::kable_styling()
+M1.reg.alon.ls$forest_plot
+M1.reg.alon_conti.ls$ggplot_ROC
+print(M1.reg.alon_conti.ls$auc)
+
+# OR i sig estrat: Homes
+M1.reg.alon_conti.ls.H$taula_OR %>% kable(digits = 3,caption = "OR de evento CV por incremento de REGICOR previo en Varones") %>% kableExtra::kable_styling()
+M1.reg.alon.ls.H$taula_OR %>% kable(digits = 3, caption = "OR de evento CV por grupo de riesgo segun su REGICOR previo en varones") %>% kableExtra::kable_styling()
+M1.reg.mis.ls.H$taula_OR %>% kable(digits = 3, caption = "OR de evento CV por disponibilidad de REGICOR en relación a missings en varones") %>% kableExtra::kable_styling()
+M1.reg.alon.ls.H$forest_plot
+
+# OR i sig estrat: Dones
+M1.reg.alon_conti.ls.D$taula_OR %>% kable(digits = 3,caption = "OR de evento CV por incremento de REGICOR previo en Varones") %>% kableExtra::kable_styling()
+M1.reg.alon.ls.D$taula_OR %>% kable(digits = 3, caption="OR de evento CV por incremento de REGICOR previo en Mujeres") %>% kableExtra::kable_styling()
+M1.reg.mis.ls.D$taula_OR %>% kable(digits = 3,caption="OR de evento CV por disponibilidad de REGICOR en relación a missings en varones") %>% kableExtra::kable_styling()
+M1.reg.alon.ls.D$forest_plot
+
+
+```
+
+### 2.1. Curva ROC de REGICOR en ambas poblaciones
+
+```{r}
+
+ROC.reg.alone.plot
+
+```
+
+
+***
+
+# 3. Objetivos secundarios
+
+- 3.1. Conocer el porcentaje de primeros eventos cardiovasculares que ocurren a edad prematura en nuestra población.
+
+> Frecuencia de eventos CV por tipo en población joven / Mayor <br/>
+> Frecuencia de eventos CV por tipo en población joven y por genero
+
+```{r message=FALSE, warning=FALSE, include=T, echo=FALSE,size="huge"}
+
+# Events prematurs Si/No
+
+export2md(T1.EVENTS.2, caption = "Tipos de eventos por grupo de edad")
+
+export2md(T1.2.EVENTS.2, caption = "Eventos por territorio por grupo de edad")
+
+export2md(T1.3.EVENTS.2, caption = "Tipos de eventos por grupo de edad")
+
+# Events per grup d'edat i sexe
+
+export2md(T1.EVENTS.3, caption = "Tipos de eventos por grupo de edad y sexo")
+
+export2md(T1.2.EVENTS.3, caption = "Eventos por territorio por grupo de edad y sexo")
+
+export2md(T1.3.EVENTS.3, caption = "Tipos de eventos por grupo de edad y sexo")
+
+
+
+```
+
+***
+
+- 3.2. Conocer el porcentaje de personas que desarrollan el primer evento cardiovascular prematuro (< 55/65 años) de los que no se dispone de información clínica previa necesaria para para evaluar su riesgo cardiovascular mediante la ecuación REGICOR en los 5 años previos al mismo. 
+
+
+
+```{r}
+
+# Events 
+export2md(taula_REGICOR_events_joves, caption = "Información faltante en Eventos CV prematuros por sexo")
+export2md(taula_REGICOR_events_grups, caption = "Información faltante en Eventos CV por grupos de edad y sexo")
+
+# Controls
+export2md(taula_REGICOR_controls_joves, caption = "Información faltante en Eventos CV prematuros por sexo")
+export2md(taula_REGICOR_controls_grups, caption = "Información faltante en Eventos CV por grupos de edad y sexo")
+
+```
+
+***
+
+- 3.3 Comparar las diferencias observadas en el objetivo principal con las de los pacientes de las categorías de edad superior (mujeres 65-70 y 70-75, hombres: 55-65 y 65-75años).
+
+
+```{r}
+
+export2md(Taula3, caption="Diferencias de Regicor entre casos y controles")
+
+export2md(Taula3.2, caption="Diferencias de Regicor entre casos y controles estratificado por sexos")
+
+export2md(Taula3.3, caption="Diferencias de Regicor entre casos y controles estratificado por edad y sexo")
+
+```
+
+- 3.4. Evaluar los componentes de la ecuación REGICOR, incluyendo además el grado de control glucémico y el tratamiento farmacológico antidiabético, antihipertensivo, hipolipemiante y antiagregante antes del desarrollo del primer evento cardiovascular prematuro (< 55/65 años) y compararlos con el grupo de pacientes de la misma edad que NO padecen su primer evento cardiovascular durante el periodo de observación 2010-2016. Realizar la misma aproximación para las categorías de edad superior.
+
+> Evaluar componentes del REGICOR en ECV prematuros
+
+
+```{r}
+
+export2md(taula4, caption="Diferencias de componentes del regicor entre casos y controles")
+
+export2md(taula4.1, caption="Diferencias de componentes del regicor entre casos y controles estratificado por edad y sexo")
+
+kable(M2.reg.vars.G1.ls$taula_OR,digits = 3,caption="OR por componente de REGICOR población joven") %>% kableExtra::kable_styling()
+
+print(M2.reg.vars.G1.ls$auc)
+M2.reg.vars.G1.ls$forest_plot
+M2.reg.vars.G1.ls$ggplot_ROC
+M2.reg.vars.G1.ls$auc_ci
+
+
+
+```
+
+> Evaluar componentes del REGICOR en ECV población general
+
+
+```{r}
+
+export2md(taula4.3, caption="Diferencias de componentes del regicor entre casos y controles")
+
+export2md(taula4.4, caption="Diferencias de componentes del regicor entre casos y controles estratificado por edad y sexo")
+
+
+kable(M2.reg.vars.G2.ls$taula_OR,digits = 3,caption="OR por componente de REGICOR población mayor") %>% kableExtra::kable_styling()
+
+print(M2.reg.vars.G2.ls$auc)
+M2.reg.vars.G2.ls$forest_plot
+M2.reg.vars.G2.ls$ggplot_ROC
+M2.reg.vars.G2.ls$auc_ci
+
+
+
+```
+
+
+- 3.5. Identificar la presencia de FRCV no clásicos (no incluidos en la ecuación REGICOR) antes del primer evento cardiovascular prematuro (< 55/65 años) y comparar su prevalencia con la observada en pacientes de la misma edad que NO padecen su primer ECV durante el periodo de observación 2010-2016. Realizar la misma aproximación para las categorías de edad superior. 
+
+```{r}
+
+export2md(taula5, caption="Diferencias FRCV no clásicos (no incluidos en la ecuación REGICOR) entre casos y controles población joven")
+
+export2md(taula5.1, caption="Diferencias dFRCV no clásicos (no incluidos en la ecuación REGICOR) entre casos y controles población joven")
+
+
+kable(M3.reg.plus.G1.ls$taula_OR,digits = 3,caption="OR por FRCV no clásicos (no incluidos en REGICOR) población joven") %>% kableExtra::kable_styling()
+print(M3.reg.plus.G1.ls$auc)
+M3.reg.plus.G1.ls$forest_plot
+M3.reg.plus.G1.ls$ggplot_ROC
+M3.reg.plus.G1.ls$auc_ci
+
+
+```
+
+>>> ORs Población mayor
+
+
+```{r}
+
+
+kable(M3.reg.plus.G2.ls$taula_OR,digits = 3,caption="OR por FRCV no clásicos población mayor") %>% kableExtra::kable_styling()
+print(M3.reg.plus.G2.ls$auc)
+M3.reg.plus.G2.ls$forest_plot
+M3.reg.plus.G2.ls$ggplot_ROC
+M3.reg.plus.G2.ls$auc_ci
+
+```
+
+- 3.6. Conocer la prevalencia de situaciones clínicas de alto riesgo CV no tributarias de evaluación mediante la ecuación REGICOR (microalbuminuria, insuficiencia renal crónica, fibrilación auricular y calcificaciones o estenosis arteriales) antes del desarrollo del primer evento cardiovascular prematuro (< 55/65 años) y comparar su prevalencia con la observada en pacientes de la misma edad que NO padecen su primer ECV durante el periodo de observación 2010-2016. Realizar la misma aproximación para las categorías de edad superior.
+
+
+```{r}
+
+export2md(taula6, caption="Prevalencia de situaciones clínicas de alto riesgo CV entre casos y controles población joven")
+
+export2md(taula6.1, caption="Prevalencia de situaciones clínicas de alto riesgo CV entre casos y controles población joven")
+
+
+
+```
+
+> Población general por grupos de edad y sexo
+
+```{r}
+
+export2md(taula6.2, caption="Prevalencia de situaciones clínicas de alto riesgo CV entre casos y controles población global por grupos")
+
+export2md(taula6.3, caption="Prevalencia de situaciones clínicas de alto riesgo CV entre casos y controles población global por grupos")
+
+
+
+```
+
+
+# 4.Análisis exploratorio previo
+
+- 4.1. Características de los eventos CV detectados en el periodo de estudio (2010-2016)
+
+```{r, message=FALSE, warning=FALSE, include=T, echo=FALSE,size="huge"}
+
+export2md(T1.FARMACS, caption = "Fármacos prescritos/dispensados en oficinas de farmacias (Dispensados año previo / Prescripción activa en fecha)")
+
+```
+
+- 4.2. Validación de eventos CV y características de casos en relación a los controles   
+
+```{r, message=FALSE, warning=FALSE, include=T, echo=FALSE,size="huge"}
+
+
+export2md(T2.ANTECEDENTS, caption = "Antecedentes de diagnóstico")
+
+# export2md(T2.FARMACS, caption = "Fármacos prescritos / dispensados 1 año previo")
+
+export2md(T2.VALORS, caption = "Determinaciones de 1-3 años previas")
+
+```
+
+***
+
+
+
+
