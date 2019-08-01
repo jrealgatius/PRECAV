@@ -41,70 +41,17 @@ num_controls<-4
 # Llista d'aparellamenta
 llistaPS=c("sexe","any_naix","idup")
 
-# 1. Lectura de Fitxers  --------------------------
-
-# ECV_CAT_entregable_pacients_20181128_152759.rds
-# ECV_CAT_entregable_pacients_20190517_101801.rds
-
-# ECV_CAT_entregable_problemes_20181123_172533.rds
-# ECV_CAT_entregable_cmbd_dx_20181123_172533.rds
-# ECV_CAT_entregable_cmbd_dx_padris_20181123_172533.rds
-# ECV_CAT_entregable_cmbd_px_padris_20181123_172533.rds
-
-# ECV_CAT_entregable_facturacions_20190517_101801.rds
-# ECV_CAT_entregable_prescripcions_20190517_101801.rds
-
-# ECV_CAT_entregable_variables_analitiques_20181123_172533.rds
-# ECV_CAT_entregable_variables_cliniques_20181123_172533.rds
-# ECV_CAT_entregable_tabaquisme_20181123_172533.rds
-
-# ECV_CAT_entregable_visites_20181123_172533.rds
-# ECV_CAT_entregable_derivacions_20181123_172533.rds
-
-# ECV_CAT_entregable_cataleg_20190517_101801.rds
-
-# LECTURA
-
 # CATALEG<-readRDS("ECV_CAT_entregable_cataleg_20190517_101801.rds")
 # library("xlsx")
 # write.xlsx(CATALEG,file="cataleg.xlsx")
 CATALEG<-readxl::read_excel(fitxer_conductor_cataleg,col_types = "text")
 
-LLEGIR.PACIENTS<-function(n=Nmostra) {
-  readRDS("./dades/sidiap_test/pacients_mostra.rds") %>% as_tibble() %>% head(n)}
+# Llegeixo les funcions de lectura de dades
+source("./sintaxis/global_lectura.R")
 
-LLEGIR.PROBLEMES<-function(n=Nmostra) {
-  readRDS("./dades/sidiap_test/PROBLEMES_mostra.rds")%>% as_tibble() %>% head(n)}
-
-LLEGIR.CMBDH<-function(n=Nmostra) {
-  readRDS("./dades/sidiap_test/CMBDH_mostra.rds") %>% as_tibble() %>% head(n)}
-
-LLEGIR.padris<-function(n=Nmostra) {
-  readRDS("./dades/sidiap_test/CMBDH_PROC_mostra.rds") %>% as_tibble() %>% head(n)}
-
-LLEGIR.PROC<-function(n=Nmostra) {
-  readRDS("./dades/sidiap_test/CMBDH.padris_mostra.rds") %>% as_tibble() %>% head(n)}
-
-LLEGIR.TABAC<-function(n=Nmostra) {
-    readRDS("./dades/sidiap_test/TABAC_mostra.rds") %>% as_tibble() %>% head(n) }
-
-LLEGIR.FX.FACTURATS<-function(n=Nmostra) {
-  readRDS("./dades/sidiap_test/FX.FACTURATS_mostra.rds")%>% as_tibble() %>% head(n) }
-
-LLEGIR.FX.PRESCRITS<-function(n=Nmostra) {
-  readRDS("./dades/sidiap_test/FX.PRESCRITS_mostra.rds")%>% as_tibble() %>% head(n) }
-
-LLEGIR.VARIABLES<-function(n=Nmostra) {
-  readRDS("./dades/sidiap_test/VARIABLES_mostra.rds")%>% as_tibble() %>% head(n) }
-
-LLEGIR.CLINIQUES<-function(n=Nmostra) {
-  readRDS("./dades/sidiap_test/CLINIQUES_mostra.rds")%>% as_tibble() %>% head(n) }
-
-LLEGIR.VISITES<-function(n=Nmostra) {
-  readRDS("./dades/sidiap_test/VISITES_mostra.rds")%>% as_tibble() %>% head(n) }
+funcions_lectura_dades(mostra=T)  # Lectura de 400 000 usuaris
 
 #  Llegir PACIENTS, I PROBLEMES DE SALUT
-
 PACIENTS<-Inf %>% LLEGIR.PACIENTS()
 PROBLEMES<-Nmostra %>% LLEGIR.PROBLEMES()
 CMBDH<-Nmostra %>% LLEGIR.CMBDH()
