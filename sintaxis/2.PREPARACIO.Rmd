@@ -282,7 +282,7 @@ dades<-recodificar(dades,taulavariables = conductor_variables,criteris = "recode
 
 table(dades$numControls)
 # Aplicar filtre 0: Nombre mínim de controls per cas (r:1:4)
-Nmin_Crl_Cas<-0 # Nombre mínim de controls per cas 
+Nmin_Crl_Cas<-3 # Nombre mínim de controls per cas 
 #
 Freq_Exc0<-table(dades$numControls>Nmin_Crl_Cas)[1] %>% as.numeric()
 NExc_match<-table(dades$event,dades$numControls)[,as.character(Nmin_Crl_Cas)] %>% as.vector()
