@@ -1,7 +1,9 @@
 #                               FASE LECTURA                            ---------------------
 ####  Aplicació de criteris d'inclusió i lectura de dades     
 
-memory.size(max=160685)
+# memory.size(max=160685)
+
+
 
 #
 # Directori Font     ==============================  
