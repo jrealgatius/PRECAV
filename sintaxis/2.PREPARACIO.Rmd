@@ -262,11 +262,24 @@ dades<- dades %>%
     COLLDL.valor13a<=160 ~ "LDL<160"))
 
 
+# Variable seguimento -----------------
+
+dades<-dades %>% mutate (tmps_seguiment=dtindex-lubridate::dmy("01012007"),
+                         anys_seguiment=as.numeric(tmps_seguiment)/365.25)
+
+# Generar variable event primari per grup a risk: (seleccionar grups a risk només amb event primari)
+
+dades<-dades %>% group_by(caseid) %>% summarize(EV.PRM_grup=max(EV.ECV_PR)) %>% right_join(dades,by="caseid")
 
 # Recodes
 
 dades<-recodificar(dades,taulavariables = conductor_variables,criteris = "recodes")
 
+# Copia base de dades
+
+dades_totals<-dades
+
+dades<-dades %>% filter(EV.PRM_grup==1)
 
 
 ```
@@ -331,6 +344,7 @@ dades_flow<-add_row(dades_flow,x=c(11,12),grup=c("Control","Cas"),tipo=c('pob','
 
 events_dt <-dades %>% filter(event==1) 
 events_dt %>% skimr::skim(edat)
+
 
 ```
 
