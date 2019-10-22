@@ -64,7 +64,9 @@ conductor_variables<-here::here("variables_precav.xls")
 
 dades<-readRDS(fitxer_input) %>% as_tibble()
 
+
 dades_flow<-readRDS(dades_flow) 
+
 
 ```
 
@@ -268,18 +270,12 @@ dades<-dades %>% mutate (tmps_seguiment=dtindex-lubridate::dmy("01012007"),
                          anys_seguiment=as.numeric(tmps_seguiment)/365.25)
 
 # Generar variable event primari per grup a risk: (seleccionar grups a risk només amb event primari)
+dades<- dades %>% group_by(caseid) %>% mutate(EV.PRM_grup=ifelse(sum(EV.ECV_PR==1),1,0)) %>% ungroup() 
 
-dades<-dades %>% group_by(caseid) %>% summarize(EV.PRM_grup=max(EV.ECV_PR)) %>% right_join(dades,by="caseid")
 
 # Recodes
-
 dades<-recodificar(dades,taulavariables = conductor_variables,criteris = "recodes")
 
-# Copia base de dades
-
-dades_totals<-dades
-
-dades<-dades %>% filter(EV.PRM_grup==1)
 
 
 ```
@@ -287,26 +283,42 @@ dades<-dades %>% filter(EV.PRM_grup==1)
 # 3. Criteris d'inclusió / dades per flow-chart
 
 * Casos sense control
-* Edad entre 35 y 75 anys)   
+* Edad entre 35 y 75 anys   
 * Sense per FA ni DM1 en data index
+* Sense IC previ
 
 ```{r filtratje, eval=T}
 # Dades flow-chart
 
-table(dades$numControls)
+
+dades<-dades %>% mutate(c_exclusio_edat=ifelse(edat<35 | edat>=75,1,0))
+
+
+criteris_exclusio_diagrama(dt=dades,taulavariables = conductor_variables,criteris = "c_exclusio1",etiquetes = "exc_lab",grups = "event",ordre="exc_ordre")
+
+
+
+
+
+
+
+table(dades$numControls,dades$event)
 # Aplicar filtre 0: Nombre mínim de controls per cas (r:1:4)
 Nmin_Crl_Cas<-3 # Nombre mínim de controls per cas 
 #
 Freq_Exc0<-table(dades$numControls>Nmin_Crl_Cas)[1] %>% as.numeric()
 NExc_match<-table(dades$event,dades$numControls)[,as.character(Nmin_Crl_Cas)] %>% as.vector()
 
+NExc_match<-colSum(table(dades$event,dades$numControls)[,1:4]) %>% as.vector()
+
+
 # Actualitzar NExc_match
 NExc_match<-dades_flow %>% filter(etiqueta=="Not Matching") %>% pull(N)+NExc_match
 dades_flow<-dades_flow %>% filter(etiqueta!="Not Matching")
 dades_flow<-add_row(dades_flow,x=c(5,6),grup=c("Control","Cas"),tipo=c("exc","exc"),etiqueta=c("Not matched","Not matched"),N=NExc_match)
-# Filtre
+# Filtre 0 
 dades<-dades %>% filter(numControls>Nmin_Crl_Cas)
-
+dades_totals<-dades
 
 # Aplicar filtre I (Per rang d'edat)
 Freq_pre_exc1<-table(dades$event) %>% as.vector()
@@ -338,20 +350,37 @@ dades<-dades %>% filter(DG.FA==0)
 dades_flow<-add_row(dades_flow,x=c(11,12),grup=c("Control","Cas"),tipo=c("exc","exc"),etiqueta=c("FA","FA"),N=Freq_exc)
 
 # Actualitzar dades finals flowchart
-dades_flow<-add_row(dades_flow,x=c(11,12),grup=c("Control","Cas"),tipo=c('pob','pob'),etiqueta=c("Final","Final"),N=table(dades$event) %>% as.vector())
+dades_flow1<-add_row(dades_flow,x=c(13,14),grup=c("Control","Cas"),tipo=c('pob','pob'),etiqueta=c("Final","Final"),N=table(dades$event) %>% as.vector())
+
+
+# Fer una copia de dades
+dades_totals<-dades
+
+# Afegir nou filtre
+
+# Aplicar filtre IV (PER IC : Insuf Card)
+temp<-dades %>% filter(EV.PRM_grup==0) 
+Freq_exc<-table(temp$event) %>% as.vector()
+dades<-dades %>% filter(EV.PRM_grup==1)
+# Actualitzar dades flow chart
+dades_flow2<-add_row(dades_flow,x=c(13,14),grup=c("Control","Cas"),tipo=c("exc","exc"),etiqueta=c("Ins. Card.","Ins. Card."),N=Freq_exc)
+# Actualitzar dades finals flowchart
+dades_flow2<-add_row(dades_flow2,x=c(14,15),grup=c("Control","Cas"),tipo=c('pob','pob'),etiqueta=c("Final","Final"),N=table(dades$event) %>% as.vector())
+
 
 # Verificació de filtres i salvar base d'events
-
 events_dt <-dades %>% filter(event==1) 
 events_dt %>% skimr::skim(edat)
 
 
 ```
 
-# 4. Generar Flow-chart
+# 4.1 Generar Flow-chart 1
 
 ```{r flow_chart}
 # Generar Flow_chart 
+
+dades_flow<-dades_flow1
 
 # Configuro parametres del flowchart
 pob_lab<-"Población inicial (8%)"
@@ -389,9 +418,58 @@ flow_chart<-diagramaFlowchart2G(pob_lab=pob_lab,
 
 flow_chart
 
+
+###  Genero dades flowchat 2 excloent els events Insf cardiaca  ##
+
 ```
 
+# 4.2. Generar Flow-chart 2: Excloent grups amb Insfuciencia cardiaca
 
+```{r flow_chart}
+# Generar Flow_chart 
+
+dades_flow<-dades_flow2
+
+# Configuro parametres del flowchart
+pob_lab<-"Población inicial (8%)"
+pob_lab1<-c("Potenciales controles","Controles")
+pob_lab2=c("Potenciales casos","Casos")
+
+# N inicial
+Ninicial<-dades_flow %>% filter(etiqueta=="Inicial") %>% pull(N) %>% sum()
+
+# N inicial final per grup
+NControls_inicial_final<-dades_flow %>% filter(grup=="Control" & (etiqueta=="Inicial" | etiqueta=="Final")) %>% pull(N) 
+NCas_inicial_final<-dades_flow %>% filter(grup=="Cas" & (etiqueta=="Inicial" | etiqueta=="Final")) %>% pull(N) 
+
+# Exclusions controls
+Nexcl_controls<-dades_flow %>% filter(grup=="Control" & tipo=="exc") %>% pull(N) 
+Labexcl_controls<-dades_flow %>% filter(grup=="Control" & tipo=="exc") %>% pull(etiqueta) 
+
+# Exclusions cas
+Nexcl_cas<-dades_flow %>% filter(grup=="Cas" & tipo=="exc") %>% pull(N) 
+Labexcl_cas<-dades_flow %>% filter(grup=="Cas" & tipo=="exc") %>% pull(etiqueta) 
+
+
+flow_chart<-diagramaFlowchart2G(pob_lab=pob_lab,
+                                pob=Ninicial,
+                                pob_lab1=pob_lab1,
+                                pob_lab2=pob_lab2,
+                                
+                                pob1=NControls_inicial_final, # Controls inicials i finals  
+                                pob2=NCas_inicial_final, # Casos inicials i finals 
+                                
+                                exc1=Nexcl_controls,
+                                exc_lab1=Labexcl_controls,
+                                exc2=Nexcl_cas,
+                                exc_lab2=Labexcl_cas)
+
+flow_chart
+
+
+###  Genero dades flowchat 2 excloent els events Insf cardiaca  ##
+
+```
 
 # 4. Etiquetació / factorització
 
@@ -401,12 +479,15 @@ Factoritzar NO.Yes llista de variables "factor" situades a la taulavariables cam
 ```{r etiquetacio, eval=F}
 
 dades<-factoritzar.NO.YES(dt=dades,columna="factor.YESNO",taulavariables=conductor_variables)
+dades_totals<-factoritzar.NO.YES(dt=dades_totals,columna="factor.YESNO",taulavariables=conductor_variables)
 
 # Value labels
 dades<-etiquetar_valors(dades,variables_factors = conductor_variables,fulla="value_label")
+dades_totals<-etiquetar_valors(dades_totals,variables_factors = conductor_variables,fulla="value_label")
 
 # Etiquetar 
 dades<-etiquetar(d=dades,taulavariables = conductor_variables)
+dades_totals<-etiquetar(d=dades_totals,taulavariables = conductor_variables)
 
 
 ```
