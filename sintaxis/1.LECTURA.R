@@ -8,7 +8,6 @@
 #
 # Directori Font     ==============================  
 gc()
-rm(list=ls())
 
 link_source<-paste0("https://github.com/jrealgatius/Stat_codis/blob/master/funcions_propies.R","?raw=T")
 devtools::source_url(link_source)
@@ -29,7 +28,7 @@ Nmostra=Inf
 AGR_CAS<-"ECV_TER"
 # 
 # fitxersortida
-fitxersortida<-"./dades/preparades/BD_PRECAV_test5.rds"
+fitxersortida<-"./dades/preparades/BD_PRECAV_test6.rds"
 
 # fitxer conductor cataleg 
 fitxer_conductor_cataleg<-"cataleg_precav.xls"
@@ -51,7 +50,9 @@ CATALEG<-readxl::read_excel(fitxer_conductor_cataleg,col_types = "text")
 # Llegeixo les funcions de lectura de dades
 source("./sintaxis/global_lectura.R")
 
-funcions_lectura_dades(mostra=T)  # Lectura de 400 000 usuaris
+# mostra=T/F
+# funcions_lectura_dades(mostra=F)  # Lectura de 400 000 usuaris / o tota la Població
+# funcions_lectura_dades(mostra=T)  # Lectura de 400 000 usuaris / o tota la Població
 
 #  Llegir PACIENTS, I PROBLEMES DE SALUT
 PACIENTS<-Inf %>% LLEGIR.PACIENTS()
@@ -73,6 +74,7 @@ PACIENTS<-PACIENTS %>%
   filter (dnaix>19350101 & dnaix<19811231) %>%      # Nascuts entre el 35 i l'any 81
   filter (entrada<20070101) %>%                     # Antiguitat SIDIAP anterior a 2007
   filter (!(situacio=="D" & sortida<=20100101))     # Excloc: Difunts anterior a 2010
+
 
 # 3.1. Identificar Casos i fusionar problemes de salut   ---------------------------
 
@@ -117,7 +119,8 @@ PACIENTS<-PACIENTS %>%
 # Genero variable ANTECEDENT i EVENT (CAS) i selecciono la cohort de pacients sense ANTECEDENTS
 
 # Considero data0 d'inici cohort 2010/01/01
-data0_cohort<-lubridate::ymd("20100101") %>% as.numeric()
+data0_cohort<-20100101
+
 
 PACIENTS<-PACIENTS %>% 
   mutate (ANT.event=ifelse(dtevent<=data0_cohort,1,0)) %>% 
@@ -128,7 +131,6 @@ PACIENTS<-PACIENTS %>%
   select(-ANT.event)
 
 # 4.2. Criteri d'exclusió 3 antecedent de DM1 o Fibrilació auricular--------
-
 DM1_dt<-agregar_problemes_agr(dt=PROBLEMES_total,agregador = "E10",camp_agregador = "agr",bd.dindex = "20100101",dt.agregadors = CATALEG,finestra.dies=c(-Inf,0))
 FA_dt<-agregar_problemes_agr(dt=PROBLEMES_total,agregador = "FA",camp_agregador = "agr",bd.dindex = "20100101",dt.agregadors = CATALEG,finestra.dies=c(-Inf,0))
 
@@ -147,9 +149,10 @@ PACIENTS<-PACIENTS %>% anti_join(FA_dt,by="idp")
 
 # Genero data de sortida (dtsortida)
 PACIENTS <- PACIENTS %>% 
-  mutate(dtsortida=case_when (event==1~ dtevent,
-                             event==0 ~ as.Date(as.character(sortida),format="%Y%m%d") %>% as.numeric())) 
-                             
+  mutate(dtsortida=case_when (event==1~ as.Date(as.character(dtevent),format="%Y%m%d") %>% as.numeric,
+                             event==0 ~ as.Date(as.character(sortida),format="%Y%m%d") %>% as.numeric)) 
+
+
 #  5.2 Preparar base de dades per l'aparellament ------------                    
 
 #######  Hi funsiono data random en a pacients       
@@ -281,7 +284,6 @@ table(dades_match$numControls)
 descrTable(formula_vector(llistaPS,y="event"),data=dades_match)
 # extreure_OR("event~sexe+any_naix",dades=dades_match,conditional = T,strata="caseid")
 
-
 # 6. Agregar variables en data index -----------------------
 
 #     6.1. Agregar visites (Any anterior) -------------
@@ -406,6 +408,7 @@ BDTOTAL<- BDTOTAL %>%
 
 # Convert a data 
 BDTOTAL<-BDTOTAL %>% mutate(dtindex=lubridate::as_date(dtindex))
+
 
 # 8. Salvar taula plana  ------------
 saveRDS(BDTOTAL,fitxersortida)  
