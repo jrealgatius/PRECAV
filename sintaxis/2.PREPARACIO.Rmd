@@ -9,23 +9,25 @@ output:
   pdf_document: default
   word_document: default
 params:
-  evaluar: TRUE
+  evaluar: TRUE 
+  fitxer_entrada: "BD_PRECAV_test5.rds" 
+  filtre: "c_inclusio_grup_MACE==1" 
+  
 ---
 
 
 # Càrrega de funcions  
 
-```{r setup, include=F}
+```{r setup, include=T}
 library(knitr)
 knitr::opts_chunk$set(
 	eval = params$evaluar,
-	echo = FALSE,
+	echo = T,
 	error = FALSE,
 	warning = FALSE,
-	include = FALSE
+	include = T
 )
 
-rm(list=ls())
 
 link_source<-paste0("https://github.com/jrealgatius/Stat_codis/blob/master/funcions_propies.R","?raw=T")
 devtools::source_url(link_source)
@@ -40,10 +42,10 @@ library(here)
 
 >> Inicialització de parametres  
 
-```{r inicialitzacio}
+```{r inicialitzacio, include=T}
 
 
-fitxer_input<-"BD_PRECAV_test6.rds"
+fitxer_input<-params$fitxer_entrada
 fitxer_input<-here::here("dades/preparades",fitxer_input)
 
 dades_flow_input<-here::here("dades","dades_flow.rds")
@@ -62,7 +64,6 @@ conductor_variables<-here::here("variables_precav.xls")
 ```{r lectura}
 
 dades<-readRDS(fitxer_input) %>% as_tibble()
-
 
 dades_flow<-readRDS(dades_flow_input) 
 
@@ -213,16 +214,17 @@ dades<-dades %>% mutate(col_noHDL13a=COLTOT.valor13a--COLHDL.valor13a)
 
 # regicor_cat2 (DM1 no te regicor)
 dades<-dades %>% mutate(regicor_cat2=case_when(
-  regicor<4.51~1,
-  regicor>=4.51 & regicor<=9.51~2,
-  regicor>=9.51 & regicor<=14.51~3,
-  regicor>=14.51 ~4)) 
+  regicor<5~1,
+  regicor>=5 & regicor<10~2,
+  regicor>=10 & regicor<15~3,
+  regicor>=15 ~4)) 
 
 # regicor_cat (DM1 no te regicor)
 dades<-dades %>% mutate(regicor_cat=case_when(
-  regicor<4.51~1,
-  regicor>=4.51 & regicor<=9.51~2,
-  regicor>=9.51 ~3)) 
+  regicor<5~1,
+  regicor>=5 & regicor<10~2,
+  regicor>=10 ~3)) 
+
 
 # regicor_mis 
 dades<-dades %>% mutate(regicor_mis=if_else(is.na(regicor),"Missing","Value") %>% as.factor())
@@ -265,6 +267,19 @@ dades<- dades %>%
 dades<-dades %>% mutate (tmps_seguiment=dtindex-lubridate::dmy("01012007"),
                          anys_seguiment=as.numeric(tmps_seguiment)/365.25)
 
+
+# Edat/homes i dones
+dades<-dades %>% mutate(edatH=ifelse(sexe=="H",edat,NA))
+dades<-dades %>% mutate(edatD=ifelse(sexe=="D",edat,NA))
+
+# Dislipemia ((TG>150 | COLTOTAL>240 ) & HIPOLIPEMIANTES (FD.HIPOLIP PRESCRITOS O DISPENSADOS))
+# TG.valor COLTOT.valor
+# FD.HIPOLIP FP.HIPOLIP 
+
+dades<-dades %>% mutate(DG.DSL=if_else(FD.HIPOLIP | FP.HIPOLIP | TG.valor>150 | COLTOT.valor>240,1,0)) %>% 
+  mutate(DG.DSL=if_else(is.na(DG.DSL),0,DG.DSL)) 
+
+
 # Generar variable event primari per grup a risk: (seleccionar grups a risk només amb event primari)
 dades<- dades %>% group_by(caseid) %>% mutate(EV.PRM_grup=ifelse(sum(EV.ECV_PR==1),1,0)) %>% ungroup() 
 
@@ -272,18 +287,8 @@ dades<- dades %>% group_by(caseid) %>% mutate(EV.PRM_grup=ifelse(sum(EV.ECV_PR==
 dades<-recodificar(dades,taulavariables = conductor_variables,criteris = "recodes")
 dades<-recodificar(dades,taulavariables = conductor_variables,criteris = "recodes2")
 
-
-# Edat/homes i dones
-dades<-dades %>% mutate(edatH=ifelse(sexe=="H",edat,NA))
-dades<-dades %>% mutate(edatD=ifelse(sexe=="D",edat,NA))
-
-# Dislipemia ((TG>150 | COLTOTAL>240 ) & HIPOLIPEMIANTES (FD.HIPOLIP PRESCRITOS O DISPENSADOS))
-
-# TG.valor COLTOT.valor
-# FD.HIPOLIP FP.HIPOLIP 
-
-dades<-dades %>% mutate(DG.DSL=if_else(FD.HIPOLIP | FP.HIPOLIP | TG.valor>150 | COLTOT.valor>240,1,0)) %>% 
-  mutate(DG.DSL=if_else(is.na(DG.DSL),0,DG.DSL)) 
+# Generar filtre posterior (Grups , Event i seus controls: només si es MACE (s'exclou: nomes Insuficiecia cardiaca / Artper) 
+dades<-dades %>% group_by(caseid) %>% mutate(c_inclusio_grup_MACE=sum(EV.ECV_AMP==1)) %>% ungroup() 
 
 
 ```
@@ -301,6 +306,9 @@ dades<-dades %>% mutate(DG.DSL=if_else(FD.HIPOLIP | FP.HIPOLIP | TG.valor>150 | 
 
 ```{r filtratje}
 # Dades flow-chart
+# Filtre inicial de grup
+dades<-dades %>% filter(eval(parse(text=params$filtre)))
+
 # Generar criteris d'exclusió grupals (Si ho cumpleix condició eliminar tot el grup)
 
 # Exclusió per edat
@@ -311,13 +319,10 @@ dades<-dades %>% mutate(c_exclusio_FA=ifelse(DG.FA==1,1,0)) %>% group_by(caseid)
 
 
 # Genero flow-chart sequencial 
-flow_chart<-criteris_exclusio_diagrama(dt=dades,taulavariables = conductor_variables,criteris = "c_exclusio1",etiquetes = "exc_lab",grups = "event",ordre="exc_ordre",sequencial=T,pob_lab=c("Pob nascuda: 1935-1981","Pob final"))
+flow_chart<-criteris_exclusio_diagrama(dt=dades,taulavariables = conductor_variables,criteris = "c_exclusio1",etiquetes = "exc_lab",grups = "event",ordre="exc_ordre",sequencial=T,pob_lab=c("Pob aparellada nascuda: 1935-1981","Pob final"))
 
 # Aplicar criteris d'exclusió
 dades<-dades %>% criteris_exclusio(conductor_variables,criteris = "c_exclusio1")
-
-# Generar filtre posterior (Grups , Event i seus controls: només si es MACE (s'exclou: nomes Insuficiecia cardiaca / Artper) 
-dades<-dades %>% group_by(caseid) %>% mutate(c_inclusio_grup_MACE=sum(EV.ECV_AMP==1)) %>% ungroup() 
 
 # Verificació de filtres i salvar base d'events
 events_dt <-dades %>% filter(event==1) 
@@ -572,7 +577,6 @@ dades_temp<-dades %>% select(extreure.variables("baseline",conductor_variables),
 # Estratificat per grups
 taula<-descrTable(formula_text,data=dades_temp,show.p.overall = F,show.all = F,show.n = T,simplify = F)
 T2.BASELINE.sex.edat<-strataTable(taula,"edat_pre")
-T2.BASELINE.sex.edat
 
 # Farmacs 
 formula<-formula.text(x="farmacs_previs",y="event",taulavariables = conductor_variables) 
@@ -635,9 +639,10 @@ dades_temp<-dades %>% filter(sexe=="D" & edat_grup=="Young:M<55/F<65")
 M1.reg.alon_conti.ls.D<-extreure_model_logistic(x="regicor_alone_continu",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
 M1.reg.alon.ls.D<-extreure_model_logistic(x="regicor_alone",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
 M1.reg.mis.ls.D<-extreure_model_logistic(x="regicor_mis",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
-
-
 ```
+
+
+
 
 >- Evaluar Regicor (Taules per objectiu primari)
 
@@ -645,9 +650,13 @@ M1.reg.mis.ls.D<-extreure_model_logistic(x="regicor_mis",y="event",taulavariable
 
 
 ```{r regicor_plus}
-
 M2.reg.vars.ls<-extreure_model_logistic(x="regicor_vars",y="event",taulavariables=conductor_variables,dades=dades,valor_outcome=cat_event,conditional = T,strata = "caseid")
+# Numero de efectius amb variables regicor
+n_regicor_vars<-na.omit(selectorvariables("regicor_vars",taulavariables = conductor_variables,dades)) %>% count()
+
 M3.reg.plus.ls<-extreure_model_logistic(x="regicor_plus",y="event",taulavariables=conductor_variables,dades=dades,valor_outcome=cat_event,conditional = T,strata = "caseid")
+# Numero de efectius amb variables regicor_plus
+n_regicor_plus<-na.omit(selectorvariables("regicor_plus",taulavariables = conductor_variables,dades)) %>% count()
 
 ```
 
@@ -884,9 +893,7 @@ dades_temp<-dades %>% select(extreure.variables("taula9.2",conductor_variables),
 taula9.2<-descrTable(event~.-sexe-edat_pre,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = F,show.ratio = F)
 taula9.2.1<-strataTable(taula9.2,"edat_pre")
 
-
 # ORs (Model 4)
-
 # Generador de ORs (Model 4)
 M4.2.reg.plus.G1.ls<-extreure_model_logistic(x="taula9.2",y="event",taulavariables=conductor_variables,dades=dades,valor_outcome=cat_event,conditional = T,strata = "caseid")
 

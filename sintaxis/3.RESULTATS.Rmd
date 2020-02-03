@@ -47,6 +47,7 @@ library(purrr)
 ```
 
 
+
 ```{r import}
 
 load("output/R_data/output_PRECAV_v4.Rdata")
@@ -55,7 +56,7 @@ load("output/R_data/output_PRECAV_v4.Rdata")
 ```
 
 
-# Análisis exploratario PRELIMINAR (Muestra). 
+# Análisis exploratario PRELIMINAR (Muestra `r params$filtre`). 
 
 - Muestra inicial de aprox un 8% (N=400000 random) de la base poblacional (N=5 400 000) por motivos computacionales
 - Post aplicación de criterios de inclusión + matching = `r dim(dades)[1]` casos y controles (r=1:4 aproximada)
@@ -81,6 +82,13 @@ Determinar el perfil de riesgo (estimado mediante la ecuación REGICOR) antes de
 
 > Actualizaciones 
 
+&check; Punts de tall regicor: (<5<10) <br/>
+&check; Actualització de resultats   <br/>
+&check; Revisió de models  <br/>
+&check; Aplicar filtre MACE  <br/>
+
+> Realizado
+
 &check; Revisió de codi data manager y montatje de tot l'estudi <br/>
 &check; Inclusió de grups a risk, amb menys de 4 controls per cas  <br/>
 &check; No exclusió de subjectes amb DM1 (S'inclouen per consideració d'errades)  <br/>
@@ -90,9 +98,6 @@ Determinar el perfil de riesgo (estimado mediante la ecuación REGICOR) antes de
   consum alcohol   <br/>
 &check; Categorització de Regicor 3 nivells: <br/>
 &check; Actualització de taules amb noves dades   <br/>
-
-> Realizado
-
 &check; Factoritzar consum alcohol   <br/>
 &check; Incloure en DM2 codis de otras DM (E12,E13,E14,O24)  <br/>
 &check; Actualització de Regicor <br/>
@@ -158,7 +163,7 @@ We used conditional logistic regression to estimate the odds ratio (OR) and 95% 
 
 > Las exclusiones incluidas en el diagrama son posteriores a 01/2010 y son descartes de todo el grupo a riesgo para conservar el emparejamiento. 
 
-Ejemplo 1: Si en un grupo a riesgo X, un individuo que se detecta un IAM tiene 85 años, se elimina todo el grupo a riesgo, pues ninguno cumpliria criterios de inclusión en este momento. 
+Ejemplo 1: Si en un grupo a riesgo X, un individuo que se detecta un IAM tiene 85 años, se elimina todo el grupo a riesgo, pues ninguno cumpliria criterios de inclusión en este momento. <br/>
 Ejemplo 2: Si en un grupo a riesgo X, un individuo caso que se detecta por IAM tiene una FA previa, se elimina todo el grupo a riesgo. 
 
 
@@ -270,9 +275,8 @@ M1.reg.alon_conti.ls.D$taula_OR %>% kable(digits = 3,caption = "Tabla 17: OR de 
 M1.reg.alon.ls.D$taula_OR %>% kable(digits = 3, caption="Tabla 18: OR de evento CV por incremento de REGICOR previo en Mujeres") %>% kableExtra::kable_styling()
 M1.reg.mis.ls.D$taula_OR %>% kable(digits = 3,caption="Tabla 19: OR de evento CV por disponibilidad de REGICOR en relación a missings en Mujeres") %>% kableExtra::kable_styling()
 M1.reg.alon.ls.D$forest_plot
-
-
 ```
+
 
 ***
 ### Curva ROC de REGICOR por grup de edad
