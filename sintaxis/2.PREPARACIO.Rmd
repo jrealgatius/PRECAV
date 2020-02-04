@@ -11,7 +11,7 @@ output:
 params:
   evaluar: TRUE 
   fitxer_entrada: "BD_PRECAV_test5.rds" 
-  filtre: "c_inclusio_grup_MACE==1" 
+  filtre: "c_inclusio_grup_MACE>=0" 
   
 ---
 
@@ -50,7 +50,7 @@ fitxer_input<-here::here("dades/preparades",fitxer_input)
 
 dades_flow_input<-here::here("dades","dades_flow.rds")
 
-output_PRECAV<-"output_PRECAV_v4.Rdata"
+output_PRECAV<-"output_PRECAV_v5.Rdata"
 output_PRECAV<-"output/R_data" %>% here::here(output_PRECAV)
 
 conductor_variables<-here::here("variables_precav.xls")
@@ -69,6 +69,46 @@ dades_flow<-readRDS(dades_flow_input)
 
 
 ```
+
+
+# 1.2. Generació de conjunt de dades imputades
+
+```{r imputacio, eval=F}
+
+# Fer IMPUTACIO I GUARDAR LONG + DATASET INICIAL  ----------------------
+
+# Mice metode
+library(mice)
+# 1. Selecciono data_set de variables que vull utilitzar per la imputació   -------
+variables_a_imputar<-extreure.variables("imp",taulavariables = conductor_variables)
+
+dades_imputation<-dades %>% select("idp",variables_a_imputar)
+dades_no_imputades<-dades %>% select(-variables_a_imputar,"idp")
+
+# Aplico model d'imputació  (Genero les dades imputades)  ----------
+num_imputacions<-1 # Normalment >=10
+num_iteracions<-5 # Normalment 5
+# Generar imputacions
+start_time <- Sys.time()
+# mice(data=dades_imputation,m=num_imputacions,maxit=5,meth='pmm',seed=123,remove.collinear=T)
+tempData <- mice(data=dades_imputation,m=num_imputacions,maxit=num_iteracions,meth='cart',seed=123,remove.collinear=T)
+# ,remove.collinear=F)
+end_time <- Sys.time()
+end_time-start_time
+
+# Generar llista de dades imputades en llista i en data_frame
+data_list <- 1:num_imputacions %>% map(~mice::complete(tempData, .x)) 
+data_long<-mice::complete(tempData, action = "long", include = F)
+data_long_total<-mice::complete(tempData, action = "long", include = T)
+
+# Juntar data_long_total les dades no imputades
+dades<-data_long_total %>% left_join(dades_no_imputades,by="idp")
+# Convertir objecte MICE
+miceData<-as.mids(data_long_total)
+
+```
+
+
 
 # 2. Calculs i Recodificacions  ----------------
 
@@ -280,15 +320,21 @@ dades<-dades %>% mutate(DG.DSL=if_else(FD.HIPOLIP | FP.HIPOLIP | TG.valor>150 | 
   mutate(DG.DSL=if_else(is.na(DG.DSL),0,DG.DSL)) 
 
 
-# Generar variable event primari per grup a risk: (seleccionar grups a risk només amb event primari)
+# Generar variable event primari grup a risk: (seleccionar grups a risk només amb event primari)
 dades<- dades %>% group_by(caseid) %>% mutate(EV.PRM_grup=ifelse(sum(EV.ECV_PR==1),1,0)) %>% ungroup() 
 
 # Recodes automatics
 dades<-recodificar(dades,taulavariables = conductor_variables,criteris = "recodes")
 dades<-recodificar(dades,taulavariables = conductor_variables,criteris = "recodes2")
 
+
 # Generar filtre posterior (Grups , Event i seus controls: només si es MACE (s'exclou: nomes Insuficiecia cardiaca / Artper) 
-dades<-dades %>% group_by(caseid) %>% mutate(c_inclusio_grup_MACE=sum(EV.ECV_AMP==1)) %>% ungroup() 
+dades<-dades %>% group_by(caseid) %>% mutate(c_inclusio_grup_MACE=ifelse(sum(EV.ECV_AMP==1),1,0)) %>% ungroup()
+
+# Visites previes: 1.Si/0.No
+dades<-dades %>% mutate(visites_cat=ifelse(visites_TOT>=1,1,0))
+
+
 
 
 ```
@@ -296,7 +342,7 @@ dades<-dades %>% group_by(caseid) %>% mutate(c_inclusio_grup_MACE=sum(EV.ECV_AMP
 
 # 3. Criteris d'exclusió post / dades per flow-chart
 
-** Ojo que només s'excluen FA / i per edat i grups sense controls
+** Ojo que només s'excluen FA / i per edat i grups corresponents sense control
 ** S'exclou tot el grups 
 
 * Casos sense control
@@ -306,7 +352,7 @@ dades<-dades %>% group_by(caseid) %>% mutate(c_inclusio_grup_MACE=sum(EV.ECV_AMP
 
 ```{r filtratje}
 # Dades flow-chart
-# Filtre inicial de grup
+# Aplicar filtre inicial de grup
 dades<-dades %>% filter(eval(parse(text=params$filtre)))
 
 # Generar criteris d'exclusió grupals (Si ho cumpleix condició eliminar tot el grup)
@@ -330,6 +376,8 @@ events_dt %>% skimr::skim(edat)
 
 
 ```
+
+
 
 # 4.1 Generar Flow-chart 1
 
@@ -425,12 +473,13 @@ flow_chart_antic2
 
 ```
 
-# 4. Etiquetació / factorització
+# 4. Etiquetació / factorització / relevels
 
 Factoritzar NO.Yes llista de variables "factor" situades a la taulavariables camp=factor
 
 
 ```{r etiquetacio}
+
 dades<-factoritzar.NO.YES(dt=dades,columna="factor.YESNO",taulavariables=conductor_variables)
 
 # Value labels
@@ -443,6 +492,12 @@ dades<-dades %>% mutate_at(vars_char,as.factor)
 # Etiquetar 
 dades<-etiquetar(d=dades,taulavariables = conductor_variables)
 
+# Relevel FG de mes gran a més petit
+dades<-dades %>% mutate(CKDEPI.valor13a.cat4=factor(CKDEPI.valor13a.cat4,levels = rev(levels(CKDEPI.valor13a.cat4))))
+
+# Relevel MEDEA U1 Referencia 
+dades<-dades %>% mutate(qmedea=factor(qmedea,levels = rev(levels(qmedea))))
+dades<-dades %>% mutate(qmedea=relevel(qmedea,"U1"))
 
 ```
 
@@ -650,6 +705,7 @@ M1.reg.mis.ls.D<-extreure_model_logistic(x="regicor_mis",y="event",taulavariable
 
 
 ```{r regicor_plus}
+
 M2.reg.vars.ls<-extreure_model_logistic(x="regicor_vars",y="event",taulavariables=conductor_variables,dades=dades,valor_outcome=cat_event,conditional = T,strata = "caseid")
 # Numero de efectius amb variables regicor
 n_regicor_vars<-na.omit(selectorvariables("regicor_vars",taulavariables = conductor_variables,dades)) %>% count()
@@ -657,6 +713,8 @@ n_regicor_vars<-na.omit(selectorvariables("regicor_vars",taulavariables = conduc
 M3.reg.plus.ls<-extreure_model_logistic(x="regicor_plus",y="event",taulavariables=conductor_variables,dades=dades,valor_outcome=cat_event,conditional = T,strata = "caseid")
 # Numero de efectius amb variables regicor_plus
 n_regicor_plus<-na.omit(selectorvariables("regicor_plus",taulavariables = conductor_variables,dades)) %>% count()
+
+
 
 ```
 
@@ -817,14 +875,12 @@ taula5.2<-descrTable(event~.-sexe-edat_pre-edat.cat5,data=dades_temp,show.p.over
 taula5.3<-strataTable(taula5.2,"edat_pre")
 taula5.4<-strataTable(taula5.2,"edat.cat5")
 
-
 # OR's població gran
 kable(M3.reg.plus.G2.ls$taula_OR,digits = 3,caption="OR por componente de REGICOR población mayor") %>% kableExtra::kable_styling()
 print(M3.reg.plus.G2.ls$auc)
 M3.reg.plus.G2.ls$forest_plot
 M3.reg.plus.G2.ls$ggplot_ROC
 M3.reg.plus.G2.ls$auc_ci
-
 
 
 ```
@@ -865,7 +921,6 @@ taula9.1<-strataTable(taula9,"edat_pre")
 # ORs (Model 4)
 M4.reg.plus.G1.ls<-extreure_model_logistic(x="taula9",y="event",taulavariables=conductor_variables,dades=dades,valor_outcome=cat_event,conditional = T,strata = "caseid")
 
-
 M4.reg.plus.G1.ls$taula_OR
 
 kable(M4.reg.plus.G1.ls$taula_OR,digits = 2) %>% kableExtra::kable_styling()
@@ -876,6 +931,7 @@ M4.reg.plus.G1.ls$auc_ci
 
 
 # Estratificado por edat i sexo edat_pre 
+
 M4.reg.plus.grupos<-dades %>% split(.$edat_pre) %>%
   map(~ extreure_model_logistic(x="taula9",y="event",taulavariables=conductor_variables,dades=.x,valor_outcome=cat_event,conditional = T,strata = "caseid")[[1]]) 
 
@@ -883,6 +939,7 @@ M4.reg.plus.grupos$`Old man(>=55)`
 M4.reg.plus.grupos$`Old woman(>=65)`
 M4.reg.plus.grupos$`Young man(<55)`
 M4.reg.plus.grupos$`Young woman(<65)`
+
 
 ```
 

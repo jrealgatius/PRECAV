@@ -31,7 +31,7 @@ output:
 
 
 ```{r setup, include=FALSE}
-rm(list=ls())
+# rm(list=ls())
 knitr::opts_chunk$set(echo = FALSE,include=T,warning=F)
 
 knitr::opts_knit$set(root.dir = normalizePath('../'))
@@ -50,7 +50,7 @@ library(purrr)
 
 ```{r import}
 
-load("output/R_data/output_PRECAV_v4.Rdata")
+load("output/R_data/output_PRECAV_v5.Rdata")
 
 
 ```
@@ -82,13 +82,14 @@ Determinar el perfil de riesgo (estimado mediante la ecuación REGICOR) antes de
 
 > Actualizaciones 
 
+&check; FG tres punts de tall: (<30<60) <br/>
+
+> Realizado
+
 &check; Punts de tall regicor: (<5<10) <br/>
 &check; Actualització de resultats   <br/>
 &check; Revisió de models  <br/>
 &check; Aplicar filtre MACE  <br/>
-
-> Realizado
-
 &check; Revisió de codi data manager y montatje de tot l'estudi <br/>
 &check; Inclusió de grups a risk, amb menys de 4 controls per cas  <br/>
 &check; No exclusió de subjectes amb DM1 (S'inclouen per consideració d'errades)  <br/>
