@@ -77,15 +77,22 @@ Determinar el perfil de riesgo (estimado mediante la ecuación REGICOR) antes de
 ***
 
 
-
 # ESTADO
 
 > Actualizaciones 
 
-&check; FG tres punts de tall: (<30<60) <br/>
+&check; Nous models afegint variable categoritzada TG>=200 <br/>
+&check; Arreglades recodificacions Hiperuricemia >=7 / CAC>=30  <br/>
+&check; Actualització de taules <br/>
 
 > Realizado
 
+&check; Nous models afegint tractament prescrits <br/>
+&check; Models per 4 subgrups (edat y sexe). "S'exclou variable sexe". <br/>
+&check; Arreglada funció que exclou variable no procedent automáticament generació de models <br/>
+&check; Cálcul de noves variables i afegir en tabla 1 (CAC>30 / TG>200 / URAT>7)   <br/>
+&check; Reindexo taules <br/>
+&check; FG tres punts de tall: (<30<60) <br/>
 &check; Punts de tall regicor: (<5<10) <br/>
 &check; Actualització de resultats   <br/>
 &check; Revisió de models  <br/>
@@ -140,6 +147,7 @@ Determinar el perfil de riesgo (estimado mediante la ecuación REGICOR) antes de
 * Validación estadística completa de los modelos según criterios estadísticos
 * Possibilidad de cambiar ventana temporal para evitar contaminación y evaluar evolución
 * Validación clínica
+* Validación estadística
 * Redacción de informe final y artículo
 
 ****
@@ -155,7 +163,6 @@ We used conditional logistic regression to estimate the odds ratio (OR) and 95% 
 
 ***
 
-
 > Flow-chart 
 
 > Diagrama de flujo: Se inicia con los grupos emparejados (1:4) (HASTA UN MÁXIMO).
@@ -169,11 +176,8 @@ Ejemplo 2: Si en un grupo a riesgo X, un individuo caso que se detecta por IAM t
 
 
 ```{r echo=FALSE, warning=FALSE, include=T, size="huge"}
-
-
 dades_temp<-dades %>% transmute(event,numControls=as.factor(numControls))
 descrTable(event~numControls,data=dades_temp,show.p.overall = F) %>% export2md(caption = "Distribución de número de controles por Caso")
-
 
 flow_chart
 
@@ -190,10 +194,15 @@ Descriptivo de toda la población y subpoblación joven (Casos prematuros y sus 
 
 
 ```{r descriptivo1, warning=FALSE}
+i<-1
 
-export2md(T2.BASELINE, caption = "Tabla 1: Características clínicas en fecha de de detección/registro población global")
-export2md(T2.FARMACS_ACTUALS, caption = "Tabla 2: Farmacos prescritos activos o dispensados (último año) en fecha de de detección/registro población global")
+caption<-paste0("Tabla ",i,": Características clínicas en fecha de de detección/registro población global")
+export2md(T2.BASELINE, caption = caption)
+i<-i+1
 
+caption<-paste0("Tabla ",i,": Farmacos prescritos activos o dispensados (último año) en fecha de de detección/registro población global")
+export2md(T2.FARMACS_ACTUALS, caption = caption)
+i<-i+1
 ```
 
 ***
@@ -204,17 +213,25 @@ Joven --> Young:Male<55/Female<65
 
 ```{r descriptivo2, warning=FALSE}
 
-export2md(T2.BASELINE.joves, caption = " Tabla 3: Características clínicas en fecha de de detección/registro población joven")
-export2md(T2.FARMACS_ACTUALS.joves, caption = "Tabla 4: Farmacos prescritos activos o dispensados (último año) en fecha de de detección/registro población joven")
+caption<-paste0("Tabla ",i,": Características clínicas en fecha de de detección/registro población joven")
+export2md(T2.BASELINE.joves, caption = caption)
+i<-i+1
 
-
+caption <-paste0("Tabla ",i,": Farmacos prescritos activos o dispensados (último año) en fecha de de detección/registro población joven")
+export2md(T2.FARMACS_ACTUALS.joves, caption = caption)
+i<-i+1
 ```
 
 ### 1.2. Población Mayor (No prematurs)
 
 ```{r}
-export2md(T2.BASELINE.grans, caption = "Tabla 5: Características clínicas en fecha de de detección/registro población mayor")
-export2md(T2.FARMACS_ACTUALS.grans, caption = "Tabla 6: Farmacos prescritos activos o dispensados (último año) en fecha de de detección/registro población mayor")
+caption <- paste0("Tabla ",i,": Características clínicas en fecha de de detección/registro población mayor")
+export2md(T2.BASELINE.grans, caption = caption)
+i<-i+1
+
+caption <- paste0("Tabla ",i,": Fármacos prescritos activos o dispensados (último año) en fecha de de detección/registro población mayor")
+export2md(T2.FARMACS_ACTUALS.grans,caption=caption )
+i<-i+1
 
 ```
 
@@ -222,12 +239,13 @@ export2md(T2.FARMACS_ACTUALS.grans, caption = "Tabla 6: Farmacos prescritos acti
 ### 1.3. Por grupos de edad y sexo
 
 ```{r}
+caption <- paste0("Tabla ",i,":Características clínicas en fecha de de detección/registro población mayor")
+export2md(T2.BASELINE.sex.edat,caption=caption ,position = "left")
+i<-i+1
 
-export2md(T2.BASELINE.sex.edat, caption = "Tabla 7: Características clínicas en fecha de de detección/registro población mayor",position = "left")
-
-
-export2md(T2.FARMACS_ACTUALS.sex.edat, caption = "Tabla 8: Farmacos prescritos activos o dispensados (último año) en fecha de de detección/registro población mayor")
-
+caption <- paste0("Tabla ",i,": Farmacos prescritos activos o dispensados (último año) en fecha de de detección/registro población mayor")
+export2md(T2.FARMACS_ACTUALS.sex.edat,caption=caption)
+i<-i+1
 ```
 
 ## 2. Analisis por objetivos
@@ -245,17 +263,28 @@ Ventanas temporales:
 
 
 ```{r principal, warning=FALSE}
-
-
 # Eventos prematuros
+caption <- paste0("Tabla ",i,": Estimación de REGICOR entreO casos y controles")
+export2md(Taula1,caption=caption)
+i<-i+1
 
-export2md(Taula1,caption = "Tabla 9: Estimación de REGICOR entreO casos y controles")
-export2md(Taula1.2,caption = "Tabla 10: Estimación de REGICOR entre casos y controles estratificado por genero")
+caption <- paste0("Tabla ",i,": Estimación de REGICOR entre casos y controles estratificado por genero")
+export2md(Taula1.2,caption=caption)
+i<-i+1
 
 # OR i sig Global
-M1.reg.alon_conti.ls$taula_OR %>% kable(digits = 3,caption = "Tabla 11: Odds Ratio de evento CV por incremento unitario de REGICOR previo") %>% kableExtra::kable_styling()
-M1.reg.alon.ls$taula_OR %>% kable(digits = 3,caption = "Tabla 12: Odds Ratio de evento CV por grupo de riesgo segun su REGICOR previo") %>% kableExtra::kable_styling()
-M1.reg.mis.ls$taula_OR %>% kable(digits = 3, caption= "Tabla 13: Odds Ratio de evento CV por disponibilidad de REGICOR en relación a missings" ) %>% kableExtra::kable_styling()
+caption <- paste0("Tabla ",i,": Odds Ratio de evento CV por incremento unitario de REGICOR previo")
+M1.reg.alon_conti.ls$taula_OR %>% kable(digits = 3,caption = caption) %>% kableExtra::kable_styling()
+i<-i+1
+
+caption <- paste0("Tabla ",i,": Odds Ratio de evento CV por grupo de riesgo segun su REGICOR previo")
+M1.reg.alon.ls$taula_OR %>% kable(digits = 3,caption=caption) %>% kableExtra::kable_styling()
+i<-i+1
+
+caption<- paste0("Tabla ",i,": Odds Ratio de evento CV por disponibilidad de REGICOR en relación a missings")
+M1.reg.mis.ls$taula_OR %>% kable(digits = 3,caption = caption) %>% kableExtra::kable_styling()
+i<-i+1
+
 M1.reg.alon.ls$forest_plot
 M1.reg.alon_conti.ls$ggplot_ROC
 print(M1.reg.alon_conti.ls$auc)
@@ -266,15 +295,33 @@ print(M1.reg.alon_conti.ls$auc)
 
 ```{r principal2, warning=FALSE}
 # OR i sig estrat: Homes
-M1.reg.alon_conti.ls.H$taula_OR %>% kable(digits = 3,caption = "Tabla 14: OR de evento CV por incremento de REGICOR previo en Varones") %>% kableExtra::kable_styling()
-M1.reg.alon.ls.H$taula_OR %>% kable(digits = 3, caption = "Tabla 15: OR de evento CV por grupo de riesgo segun su REGICOR previo en varones") %>% kableExtra::kable_styling()
-M1.reg.mis.ls.H$taula_OR %>% kable(digits = 3, caption = "Tabla 16: OR de evento CV por disponibilidad de REGICOR en relación a missings en varones") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": OR de evento CV por incremento de REGICOR previo en Varones")
+M1.reg.alon_conti.ls.H$taula_OR %>% kable(digits = 3,caption = caption) %>% kableExtra::kable_styling()
+i<-i+1
+
+caption<- paste0("Tabla ",i,": OR de evento CV por grupo de riesgo segun su REGICOR previo en varones")
+M1.reg.alon.ls.H$taula_OR %>% kable(digits = 3,caption=caption) %>% kableExtra::kable_styling()
+i<-i+1
+
+caption<- paste0("Tabla ",i,": OR de evento CV por disponibilidad de REGICOR en relación a missings en varones")
+M1.reg.mis.ls.H$taula_OR %>% kable(digits = 3, caption = caption) %>% kableExtra::kable_styling()
+i<-i+1
+
 M1.reg.alon.ls.H$forest_plot
 
 # OR i sig estrat: Dones
-M1.reg.alon_conti.ls.D$taula_OR %>% kable(digits = 3,caption = "Tabla 17: OR de evento CV por incremento de REGICOR previo en Mujeres") %>% kableExtra::kable_styling()
-M1.reg.alon.ls.D$taula_OR %>% kable(digits = 3, caption="Tabla 18: OR de evento CV por incremento de REGICOR previo en Mujeres") %>% kableExtra::kable_styling()
-M1.reg.mis.ls.D$taula_OR %>% kable(digits = 3,caption="Tabla 19: OR de evento CV por disponibilidad de REGICOR en relación a missings en Mujeres") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": OR de evento CV por incremento de REGICOR previo en Mujeres")
+M1.reg.alon_conti.ls.D$taula_OR %>% kable(digits = 3,caption=caption) %>% kableExtra::kable_styling()
+i<-i+1
+
+caption<- paste0("Tabla ",i,": OR de evento CV por incremento de REGICOR previo en Mujeres")
+M1.reg.alon.ls.D$taula_OR %>% kable(digits = 3,caption = caption) %>% kableExtra::kable_styling()
+i<-i+1
+
+caption<- paste0("Tabla ",i,": OR de evento CV por disponibilidad de REGICOR en relación a missings en Mujeres")
+M1.reg.mis.ls.D$taula_OR %>% kable(digits = 3,caption = caption) %>% kableExtra::kable_styling()
+i<-i+1
+
 M1.reg.alon.ls.D$forest_plot
 ```
 
@@ -314,25 +361,43 @@ ROC.reg.alone.plot + style_roc(theme = theme_grey) +
 
 ```{r secundario1, warning=FALSE}
 
+caption<- paste0("Tabla ",i,": Tipos de eventos por sexo")
+export2md(T1.EVENTS, caption = caption)
+i<-i+1
 
-export2md(T1.EVENTS, caption = "Tabla 20: Tipos de eventos por sexo")
-
-export2md(T1.2.EVENTS, caption = "Tabla 21: Eventos por territorio por sexo")
-
+caption<- paste0("Tabla ",i,": Eventos por territorio por sexo")
+export2md(T1.2.EVENTS, caption = caption)
+i<-i+1
 
 # Events prematurs Si/No
+caption<- paste0("Tabla ",i,": Tipos de eventos por grupo de edad")
+export2md(T1.EVENTS.2, caption = caption)
+i<-i+1
 
-export2md(T1.EVENTS.2, caption = "Tabla 22: Tipos de eventos por grupo de edad")
-
-export2md(T1.2.EVENTS.2, caption = "Tabla 23: Eventos por territorio por grupo de edad")
-
+caption<- paste0("Tabla ",i,": Eventos por territorio por grupo de edad")
+export2md(T1.2.EVENTS.2, caption = caption)
+i<-i+1
 
 # Events per grup d'edat i sexe
+caption<- paste0("Tabla ",i,": Tipos de eventos por grupo de edad y sexo")
+export2md(T1.EVENTS.3,caption = caption )
+i<-i+1
 
-export2md(T1.EVENTS.3, caption = "Tabla 24: Tipos de eventos por grupo de edad y sexo")
+caption<- paste0("Tabla ",i,": Eventos por territorio por grupo de edad y sexo")
+export2md(T1.2.EVENTS.3, caption = caption)
+i<-i+1
 
-export2md(T1.2.EVENTS.3, caption = "Tabla 25: Eventos por territorio por grupo de edad y sexo")
+caption<- paste0("Tabla ",i,": Tipos de eventos por sexo")
+export2md(T1.3.EVENTS, caption = caption)
+i<-i+1
 
+caption<- paste0("Tabla ",i,": Tipos de eventos por grupo")
+export2md(T1.3.EVENTS.2, caption = caption)
+i<-i+1
+
+caption<- paste0("Tabla ",i,": Tipos de eventos por edad y sexo")
+export2md(T1.3.EVENTS.3, caption = caption)
+i<-i+1
 
 
 ```
@@ -343,14 +408,23 @@ export2md(T1.2.EVENTS.3, caption = "Tabla 25: Eventos por territorio por grupo d
 
 
 ```{r secundario2, warning=F}
-
 # Events 
-export2md(taula_REGICOR_events_joves, caption = "Tabla 26: Información faltante en Eventos CV prematuros por sexo")
-export2md(taula_REGICOR_events_grups, caption = "Tabla 27: Información faltante en Eventos CV por grupos de edad y sexo")
+caption<- paste0("Tabla ",i,": Información faltante en Eventos CV prematuros por sexo")
+export2md(taula_REGICOR_events_joves,caption = caption )
+i<-i+1
+
+caption<- paste0("Tabla ",i,": Información faltante en Eventos CV por grupos de edad y sexo")
+export2md(taula_REGICOR_events_grups, caption = caption)
+i<-i+1
 
 # Controls
-export2md(taula_REGICOR_controls_joves, caption = "Tabla 28: Información faltante en Eventos CV prematuros por sexo")
-export2md(taula_REGICOR_controls_grups, caption = "Tabla 29: Información faltante en Eventos CV por grupos de edad y sexo")
+caption<- paste0("Tabla ",i,": Información faltante en controles prematuros por sexo")
+export2md(taula_REGICOR_controls_joves,caption = caption )
+i<-i+1
+
+caption<- paste0("Tabla ",i,": Información faltante en controles por grupos de edad y sexo")
+export2md(taula_REGICOR_controls_grups, caption = caption)
+i<-i+1
 
 ```
 
@@ -360,12 +434,17 @@ export2md(taula_REGICOR_controls_grups, caption = "Tabla 29: Información faltan
 
 
 ```{r secundario3, warning=F}
+caption<- paste0("Tabla ",i,": Diferencias de Regicor entre casos y controles")
+export2md(Taula3,caption = caption )
+i<-i+1
 
-export2md(Taula3, caption="Tabla 30: Diferencias de Regicor entre casos y controles")
+caption<- paste0("Tabla ",i,": Diferencias de Regicor entre casos y controles estratificado por sexos")
+export2md(Taula3.2, caption = caption)
+i<-i+1
 
-export2md(Taula3.2, caption="Tabla 31: Diferencias de Regicor entre casos y controles estratificado por sexos")
-
-export2md(Taula3.3, caption="Tabla 32: Diferencias de Regicor entre casos y controles estratificado por edad y sexo")
+caption<- paste0("Tabla ",i,": Diferencias de Regicor entre casos y controles estratificado por edad y sexo")
+export2md(Taula3.3, caption=caption )
+i<-i+1
 
 ```
 
@@ -375,19 +454,22 @@ export2md(Taula3.3, caption="Tabla 32: Diferencias de Regicor entre casos y cont
 
 
 ```{r secundario4, warning=F}
+caption<- paste0("Tabla ",i,": Diferencias de componentes del regicor entre casos y controles")
+export2md(taula4,caption = caption )
+i<-i+1
 
-export2md(taula4, caption="Tabla 33: Diferencias de componentes del regicor entre casos y controles")
+caption<- paste0("Tabla ",i,": Diferencias de componentes del regicor entre casos y controles estratificado por edad y sexo")
+export2md(taula4.1, caption=caption )
+i<-i+1
 
-export2md(taula4.1, caption="Tabla 34: Diferencias de componentes del regicor entre casos y controles estratificado por edad y sexo")
-
-kable(M2.reg.vars.G1.ls$taula_OR,digits = 3,caption="Tabla 35: OR por componente de REGICOR población joven") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": OR por componente de REGICOR población joven")
+kable(M2.reg.vars.G1.ls$taula_OR,digits = 3,caption = caption) %>% kableExtra::kable_styling()
+i<-i+1
 
 print(M2.reg.vars.G1.ls$auc)
 M2.reg.vars.G1.ls$forest_plot
 M2.reg.vars.G1.ls$ggplot_ROC
 M2.reg.vars.G1.ls$auc_ci
-
-
 
 ```
 
@@ -396,47 +478,121 @@ M2.reg.vars.G1.ls$auc_ci
 
 ```{r secundario4.2, warning=F}
 
-export2md(taula4.3, caption="Tabla 35: Diferencias de componentes del regicor entre casos y controles")
+caption<- paste0("Tabla ",i,": Diferencias de componentes del regicor entre casos y controles")
+export2md(taula4.3,caption=caption)
+i<-i+1
 
-export2md(taula4.4, caption="Tabla 36: Diferencias de componentes del regicor entre casos y controles estratificado por edad y sexo")
+caption<- paste0("Tabla ",i,": Diferencias de componentes del regicor entre casos y controles estratificado por edad y sexo")
+export2md(taula4.4, caption = caption)
+i<-i+1
 
-
-kable(M2.reg.vars.G2.ls$taula_OR,digits = 3,caption="Tabla 37: OR por componente de REGICOR población mayor") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": OR por componente de REGICOR población mayor")
+kable(M2.reg.vars.G2.ls$taula_OR,digits = 3,caption = caption) %>% kableExtra::kable_styling()
+i<-i+1
 
 print(M2.reg.vars.G2.ls$auc)
 M2.reg.vars.G2.ls$forest_plot
 M2.reg.vars.G2.ls$ggplot_ROC
 M2.reg.vars.G2.ls$auc_ci
 
+```
+
+> Evaluar componentes del REGICOR en ECV Mujeres jovenes 
+
+```{r secundario4.3, warning=F}
+
+caption<- paste0("Tabla ",i,": OR por componente de REGICOR población mayor")
+kable(M2.reg.vars.G3.ls$taula_OR,digits = 3,caption=caption) %>% kableExtra::kable_styling()
+i<-i+1
+
+print(M2.reg.vars.G3.ls$auc)
+M2.reg.vars.G3.ls$forest_plot
+M2.reg.vars.G3.ls$ggplot_ROC
+M2.reg.vars.G3.ls$auc_ci
+
 
 ```
 
+
+> Evaluar componentes del REGICOR en ECV Mujeres Mayores 
+
+```{r secundario4.4, warning=F}
+caption<- paste0("Tabla ",i,": OR por componente de REGICOR población mayor")
+kable(M2.reg.vars.G4.ls$taula_OR,digits = 3,caption=caption) %>% kableExtra::kable_styling()
+i<-i+1
+
+print(M2.reg.vars.G4.ls$auc)
+M2.reg.vars.G4.ls$forest_plot
+M2.reg.vars.G4.ls$ggplot_ROC
+M2.reg.vars.G4.ls$auc_ci
+
+```
+
+> Evaluar componentes del REGICOR en ECV Hombres jovenes 
+
+```{r secundario4.5, warning=F}
+
+caption<- paste0("Tabla ",i,": OR por componente de REGICOR población mayor")
+kable(M2.reg.vars.G5.ls$taula_OR,digits = 3,caption=caption) %>% kableExtra::kable_styling()
+i<-i+1
+
+print(M2.reg.vars.G5.ls$auc)
+M2.reg.vars.G5.ls$forest_plot
+M2.reg.vars.G5.ls$ggplot_ROC
+M2.reg.vars.G5.ls$auc_ci
+
+
+```
+
+> Evaluar componentes del REGICOR en ECV Hombres mayores 
+
+```{r secundario4.6, warning=F}
+
+caption<- paste0("Tabla ",i,": OR por componente de REGICOR población mayor")
+kable(M2.reg.vars.G6.ls$taula_OR,digits = 3,caption=caption) %>% kableExtra::kable_styling()
+i<-i+1
+
+print(M2.reg.vars.G6.ls$auc)
+M2.reg.vars.G6.ls$forest_plot
+M2.reg.vars.G6.ls$ggplot_ROC
+M2.reg.vars.G6.ls$auc_ci
+
+```
 
 - 5. Identificar la presencia de FRCV no clásicos (no incluidos en la ecuación REGICOR) antes del primer evento cardiovascular prematuro (< 55/65 años) y comparar su prevalencia con la observada en pacientes de la misma edad que NO padecen su primer ECV durante el periodo de observación 2010-2016. Realizar la misma aproximación para las categorías de edad superior. 
 
 ```{r secundario5, warning=F}
 
-export2md(taula5, caption="Tabla 38: Diferencias FRCV no clásicos (no incluidos en la ecuación REGICOR) entre casos y controles población joven")
+caption<- paste0("Tabla ",i,": Diferencias FRCV no clásicos (no incluidos en la ecuación REGICOR) entre casos y controles población joven")
+export2md(taula5, caption = caption )
+i<-i+1
 
-export2md(taula5.1, caption="Tabla 39: Diferencias dFRCV no clásicos (no incluidos en la ecuación REGICOR) entre casos y controles población joven")
+caption<- paste0("Tabla ",i,": Diferencias FRCV no clásicos (no incluidos en la ecuación REGICOR) entre casos y controles población joven")
+export2md(taula5.1, caption = caption )
+i<-i+1
 
-export2md(taula5.1.1, caption="Tabla 40: Diferencias dFRCV no clásicos (no incluidos en la ecuación REGICOR) entre casos y controles población joven")
+caption<- paste0("Tabla ",i,": Diferencias FRCV no clásicos (no incluidos en la ecuación REGICOR) entre casos y controles población joven")
+export2md(taula5.1.1, caption = caption)
+i<-i+1
 
+caption<- paste0("Tabla ",i,": OR por FRCV no clásicos (no incluidos en REGICOR) población joven")
+kable(M3.reg.plus.G1.ls$taula_OR,digits = 3,caption=caption) %>% kableExtra::kable_styling()
+i<-i+1
 
-kable(M3.reg.plus.G1.ls$taula_OR,digits = 3,caption="Tabla 41: OR por FRCV no clásicos (no incluidos en REGICOR) población joven") %>% kableExtra::kable_styling()
 print(M3.reg.plus.G1.ls$auc)
 M3.reg.plus.G1.ls$forest_plot
 M3.reg.plus.G1.ls$ggplot_ROC
 M3.reg.plus.G1.ls$auc_ci
-
 
 ```
 
 >> ORs en población mayor
 
 ```{r secundario5.2, warning=F}
+caption<- paste0("Tabla ",i,": OR por FRCV no clásicos población mayor")
+kable(M3.reg.plus.G2.ls$taula_OR,digits = 3,caption=caption) %>% kableExtra::kable_styling()
+i<-i+1
 
-kable(M3.reg.plus.G2.ls$taula_OR,digits = 3,caption="Tabla 42: OR por FRCV no clásicos población mayor") %>% kableExtra::kable_styling()
 print(M3.reg.plus.G2.ls$auc)
 M3.reg.plus.G2.ls$forest_plot
 M3.reg.plus.G2.ls$ggplot_ROC
@@ -448,25 +604,30 @@ M3.reg.plus.G2.ls$auc_ci
 
 
 ```{r secundario6, warning=F}
+caption<- paste0("Tabla ",i,": Prevalencia de situaciones clínicas de alto riesgo CV entre casos y controles población joven")
+export2md(taula6, caption=caption)
+i<-i+1
 
-export2md(taula6, caption="Tabla 43: Prevalencia de situaciones clínicas de alto riesgo CV entre casos y controles población joven")
+caption<- paste0("Tabla ",i,": Prevalencia de situaciones clínicas de alto riesgo CV entre casos y controles población joven")
+export2md(taula6.1,caption=caption )
+i<-i+1
 
-export2md(taula6.1, caption="Tabla 44: Prevalencia de situaciones clínicas de alto riesgo CV entre casos y controles población joven")
-
-export2md(taula6.1.1, caption="Tabla 45: Prevalencia de situaciones clínicas de alto riesgo CV entre casos y controles población joven")
-
+caption<- paste0("Tabla ",i,": Prevalencia de situaciones clínicas de alto riesgo CV entre casos y controles población joven")
+export2md(taula6.1.1,caption=caption )
+i<-i+1
 
 ```
 
 > Población general por grupos de edad y sexo
 
 ```{r, warning=FALSE}
+caption<- paste0("Tabla ",i,": Prevalencia de situaciones clínicas de alto riesgo CV entre casos y controles población global por grupos")
+export2md(taula6.2,caption = caption )
+i<-i+1
 
-export2md(taula6.2, caption="Tabla 46: Prevalencia de situaciones clínicas de alto riesgo CV entre casos y controles población global por grupos")
-
-export2md(taula6.3, caption="Tabla 47: Prevalencia de situaciones clínicas de alto riesgo CV entre casos y controles población global por grupos de edad y sexo")
-
-
+caption<- paste0("Tabla ",i,": Prevalencia de situaciones clínicas de alto riesgo CV entre casos y controles población global por grupos de edad y sexo")
+export2md(taula6.3,caption = caption )
+i<-i+1
 
 ```
 
@@ -476,21 +637,23 @@ export2md(taula6.3, caption="Tabla 47: Prevalencia de situaciones clínicas de a
 - 3.1. Características de los eventos CV detectados en el periodo de estudio (2010-2016)
 
 ```{r, warning=F}
-
-export2md(T1.FARMACS, caption = "Tabla 48: Fármacos prescritos/dispensados en oficinas de farmacias (Dispensados año previo / Prescripción activa en fecha)")
+caption<- paste0("Tabla ",i,": Fármacos prescritos/dispensados en oficinas de farmacias (Dispensados año previo / Prescripción activa en fecha)")
+export2md(T1.FARMACS, caption=caption)
+i<-i+1
 
 ```
 
 - 3.2. Validación de eventos CV y características de casos en relación a los controles   
 
 ```{r, warning=F}
-
-
-export2md(T2.ANTECEDENTS, caption = "Tabla 49: Antecedentes de diagnóstico")
+caption<- paste0("Tabla ",i,": Antecedentes de diagnóstico")
+export2md(T2.ANTECEDENTS,caption=caption )
+i<-i+1
 
 # export2md(T2.FARMACS, caption = "Fármacos prescritos / dispensados 1 año previo")
-
-export2md(T2.VALORS, caption = "Tabla 50: Determinaciones de 1-3 años previas")
+caption<- paste0("Tabla ",i,": Determinaciones de 1-3 años previas")
+export2md(T2.VALORS, caption=caption)
+i<-i+1
 
 ```
 
@@ -503,24 +666,34 @@ export2md(T2.VALORS, caption = "Tabla 50: Determinaciones de 1-3 años previas")
 - Estimación de OR ajustados
 
 ```{r}
+caption<- paste0("Tabla ",i,": Potenciales factores de riesgo de CV además de Regicor")
+export2md(taula9.2, caption=caption)
+i<-i+1
 
-export2md(taula9.2, caption = "Tabla 51: Potenciales factores de riesgo de CV además de Regicor")
-export2md(taula9.2.1, caption="Tabla 52: Potenciales factores de riesgo de CV además de Regicor por grupos de edad i sexo")
+caption<- paste0("Tabla ",i,": Potenciales factores de riesgo de CV además de Regicor por grupos de edad i sexo")
+export2md(taula9.2.1,caption=caption )
+i<-i+1
 
-kable(M4.reg.plus.G1.ls$taula_OR,digits = 2,caption="Tabla 53: ORs de factores de riesgo de CV además de Regicor") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": ORs de factores de riesgo de CV además de Regicor")
+kable(M4.reg.plus.G1.ls$taula_OR,digits = 2,caption=caption) %>% kableExtra::kable_styling()
+i<-i+1
+
 print(M4.reg.plus.G1.ls$auc)
 M4.reg.plus.G1.ls$forest_plot
 M4.reg.plus.G1.ls$ggplot_ROC
 M4.reg.plus.G1.ls$auc_ci
 
+M4.reg.plus.grupos[[1]] %>% kable(digits = 2, caption = paste0("Tabla ",i,": ",names(M4.reg.plus.grupos)[1])) %>% kableExtra::kable_styling()
+i<-i+1
 
-M4.reg.plus.grupos[[1]] %>% kable(digits = 2, caption = paste0("Tabla 53: ",names(M4.reg.plus.grupos)[1])) %>% kableExtra::kable_styling()
+M4.reg.plus.grupos[[2]] %>% kable(digits = 2, caption = paste0("Tabla ",i,": ",names(M4.reg.plus.grupos)[2])) %>% kableExtra::kable_styling()
+i<-i+1
 
-M4.reg.plus.grupos[[2]] %>% kable(digits = 2, caption = paste0("Tabla 54: ",names(M4.reg.plus.grupos)[2])) %>% kableExtra::kable_styling()
+M4.reg.plus.grupos[[3]] %>% kable(digits = 2, caption = paste0("Tabla ",i,": ",names(M4.reg.plus.grupos)[3])) %>% kableExtra::kable_styling()
+i<-i+1
 
-M4.reg.plus.grupos[[3]] %>% kable(digits = 2, caption = paste0("Tabla 55: ",names(M4.reg.plus.grupos)[3])) %>% kableExtra::kable_styling()
-
-M4.reg.plus.grupos[[4]] %>% kable(digits = 2, caption = paste0("Tabla 56: ",names(M4.reg.plus.grupos)[4])) %>% kableExtra::kable_styling()
+M4.reg.plus.grupos[[4]] %>% kable(digits = 2, caption = paste0("Tabla ",i,":",names(M4.reg.plus.grupos)[4])) %>% kableExtra::kable_styling()
+i<-i+1
 
 
 
@@ -529,25 +702,25 @@ M4.reg.plus.grupos[[4]] %>% kable(digits = 2, caption = paste0("Tabla 56: ",name
 ## 5. Factores de riesgo de CV además de Regicor (Informe PERIS, Tabla 9 bis)
 ```{r}
 
-# indexador de taules 
-it<-57
-
-kable(M4.2.reg.plus.G1.ls$taula_OR,digits = 2,caption=paste0("Tabla ",it,": ORs de factores de riesgo de CV además de Regicor")) %>% kableExtra::kable_styling()
-it<-it+1
+kable(M4.2.reg.plus.G1.ls$taula_OR,digits = 2,caption=paste0("Tabla ",i,": ORs de factores de riesgo de CV además de Regicor")) %>% kableExtra::kable_styling()
+i<-i+1
 
 print(M4.2.reg.plus.G1.ls$auc)
 M4.2.reg.plus.G1.ls$forest_plot
 M4.2.reg.plus.G1.ls$ggplot_ROC
 M4.2.reg.plus.G1.ls$auc_ci
 
-M4.2.reg.plus.grupos[[1]] %>% kable(digits = 2, caption = paste0("Tabla",it,":",names(M4.2.reg.plus.grupos)[1])) %>% kableExtra::kable_styling()
+M4.2.reg.plus.grupos[[1]] %>% kable(digits = 2, caption = paste0("Tabla ",i,": ",names(M4.2.reg.plus.grupos)[1])) %>% kableExtra::kable_styling()
+i<-i+1
 
-M4.2.reg.plus.grupos[[2]] %>% kable(digits = 2, caption = paste0("Tabla 59: ",names(M4.2.reg.plus.grupos)[2])) %>% kableExtra::kable_styling()
+M4.2.reg.plus.grupos[[2]] %>% kable(digits = 2, caption = paste0("Tabla ",i,": ",names(M4.2.reg.plus.grupos)[2])) %>% kableExtra::kable_styling()
+i<-i+1
 
-M4.2.reg.plus.grupos[[3]] %>% kable(digits = 2, caption = paste0("Tabla 60: ",names(M4.2.reg.plus.grupos)[3])) %>% kableExtra::kable_styling()
+M4.2.reg.plus.grupos[[3]] %>% kable(digits = 2, caption = paste0("Tabla ",i,": ",names(M4.2.reg.plus.grupos)[3])) %>% kableExtra::kable_styling()
+i<-i+1
 
-M4.2.reg.plus.grupos[[4]] %>% kable(digits = 2, caption = paste0("Tabla 61: ",names(M4.2.reg.plus.grupos)[4])) %>% kableExtra::kable_styling()
-
+M4.2.reg.plus.grupos[[4]] %>% kable(digits = 2, caption = paste0("Tabla ",i,": ",names(M4.2.reg.plus.grupos)[4])) %>% kableExtra::kable_styling()
+i<-i+1
 
 ```
 
@@ -558,34 +731,61 @@ M4.2.reg.plus.grupos[[4]] %>% kable(digits = 2, caption = paste0("Tabla 61: ",na
 
 
 ```{r}
-kable(M5.reg.cont$taula_OR,digits = 2,caption = "Tabla 62: Estimación de OR de ECV por unidad e Regicor") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": Estimación de OR de ECV por unidad e Regicor")
+kable(M5.reg.cont$taula_OR,digits = 2,caption=caption) %>% kableExtra::kable_styling()
+i<-i+1
 
-kable(M5.reg.cat$taula_OR,digits = 2,caption = "Tabla 63: Estimación de OR de ECV por nivel de Regicor") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": Estimación de OR de ECV por nivel de Regicor")
+kable(M5.reg.cat$taula_OR,digits = 2,caption=caption) %>% kableExtra::kable_styling()
+i<-i+1
 
-M5.reg.cont.sex$D %>% kable(digits = 2, caption = "Tabla 64: Estimación de OR de ECV por unidad e Regicor en Mujeres") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": Estimación de OR de ECV por unidad e Regicor en Mujeres")
+M5.reg.cont.sex$D %>% kable(digits = 2,caption=caption ) %>% kableExtra::kable_styling()
+i<-i+1
 
-M5.reg.cat.sex$D %>% kable(digits = 2, caption = "Tabla 65: Estimación de OR de ECV por nivel de Regicor en Mujeres") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": Estimación de OR de ECV por nivel de Regicor en Mujeres")
+M5.reg.cat.sex$D %>% kable(digits = 2,caption=caption ) %>% kableExtra::kable_styling()
+i<-i+1
 
-M5.reg.cont.sex$H %>% kable(digits = 2, caption = "Tabla 66: Estimación de OR de ECV por unidad e Regicor en Hombres") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": Estimación de OR de ECV por unidad e Regicor en Hombres")
+M5.reg.cont.sex$H %>% kable(digits = 2,caption=caption ) %>% kableExtra::kable_styling()
+i<-i+1
 
-M5.reg.cat.sex$H %>% kable(digits = 2, caption = "Tabla 67: Estimación de OR de ECV por nivel de Regicor en Hombres") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": Estimación de OR de ECV por nivel de Regicor en Hombres")
+M5.reg.cat.sex$H %>% kable(digits = 2,caption=caption ) %>% kableExtra::kable_styling()
+i<-i+1
 
-M5.reg.cont.edat_pre$`Old man(>=55)` %>% kable(digits = 2, caption = "Tabla 68: Estimación de OR de ECV por unidad en Old man") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": Estimación de OR de ECV por unidad en Old man")
+M5.reg.cont.edat_pre$`Old man(>=55)` %>% kable(digits = 2,caption=caption ) %>% kableExtra::kable_styling()
+i<-i+1
 
-M5.reg.cat.edat_pre$`Old man(>=55)` %>% kable(digits = 2, caption = "Tabla 69: Estimación de OR de ECV por nivel de Regicor en Old man") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": Estimación de OR de ECV por nivel de Regicor en Old man")
+M5.reg.cat.edat_pre$`Old man(>=55)` %>% kable(digits = 2,caption=caption ) %>% kableExtra::kable_styling()
+i<-i+1
 
-M5.reg.cont.edat_pre$`Old woman(>=65)` %>% kable(digits = 2, caption = "Tabla 70: Estimación de OR de evento Cardiovascular por unidad e RegicorHombresOld woman") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": Estimación de OR de evento Cardiovascular por unidad e RegicorHombresOld woman")
+M5.reg.cont.edat_pre$`Old woman(>=65)` %>% kable(digits = 2,caption=caption ) %>% kableExtra::kable_styling()
+i<-i+1
 
-M5.reg.cat.edat_pre$`Old woman(>=65)` %>% kable(digits = 2, caption = "Tabla 71: Estimación de OR de ECV por nivel de Regicor en Old woman") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": Estimación de OR de ECV por nivel de Regicor en Old woman")
+M5.reg.cat.edat_pre$`Old woman(>=65)` %>% kable(digits = 2,caption=caption ) %>% kableExtra::kable_styling()
+i<-i+1
 
-M5.reg.cont.edat_pre$`Young man(<55)` %>% kable(digits = 2, caption = "Tabla 72: Estimación de OR de evento Cardiovascular por unidad e RegicorHombresYoung man(<55)") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": Estimación de OR de evento Cardiovascular por unidad e Regicor HombresYoung man(<55)")
+M5.reg.cont.edat_pre$`Young man(<55)` %>% kable(digits = 2,caption=caption ) %>% kableExtra::kable_styling()
+i<-i+1
 
-M5.reg.cat.edat_pre$`Young man(<55)` %>% kable(digits = 2, caption = "Tabla 73: Estimación de OR de ECV por nivel de Regicor en Young man(<55)") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": Estimación de OR de ECV por nivel de Regicor en Young man(<55)")
+M5.reg.cat.edat_pre$`Young man(<55)` %>% kable(digits = 2,caption=caption ) %>% kableExtra::kable_styling()
+i<-i+1
 
-M5.reg.cont.edat_pre$`Young woman(<65)` %>% kable(digits = 2, caption = "Tabla 74: Estimación de OR de evento Cardiovascular por unidad e RegicorHombresYoung woman(<65)") %>% kableExtra::kable_styling()
+caption<- paste0("Tabla ",i,": Estimación de OR de evento Cardiovascular por unidad e RegicorHombresYoung woman(<65)")
+M5.reg.cont.edat_pre$`Young woman(<65)` %>% kable(digits = 2,caption=caption ) %>% kableExtra::kable_styling()
+i<-i+1
 
-M5.reg.cat.edat_pre$`Young woman(<65)` %>% kable(digits = 2, caption = "Tabla 75: Estimación de OR de ECV por nivel de Regicor en Young woman(<65)") %>% kableExtra::kable_styling()
-
+caption<- paste0("Tabla ",i,": Estimación de OR de ECV por nivel de Regicor en Young woman(<65)")
+M5.reg.cat.edat_pre$`Young woman(<65)` %>% kable(digits = 2,caption=caption ) %>% kableExtra::kable_styling()
+i<-i+1
 
 ```
 

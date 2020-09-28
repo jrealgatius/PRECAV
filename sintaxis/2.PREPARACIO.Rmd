@@ -29,8 +29,6 @@ knitr::opts_chunk$set(
 )
 
 
-link_source<-paste0("https://github.com/jrealgatius/Stat_codis/blob/master/funcions_propies.R","?raw=T")
-devtools::source_url(link_source)
 
 library(dplyr)
 library(here)
@@ -52,6 +50,11 @@ dades_flow_input<-here::here("dades","dades_flow.rds")
 
 output_PRECAV<-"output_PRECAV_v5.Rdata"
 output_PRECAV<-"output/R_data" %>% here::here(output_PRECAV)
+
+
+link_source<-paste0("https://github.com/jrealgatius/Stat_codis/blob/master/funcions_propies.R","?raw=T")
+devtools::source_url(link_source)
+
 
 conductor_variables<-here::here("variables_precav.xls")
 
@@ -323,6 +326,7 @@ dades<-dades %>% mutate(DG.DSL=if_else(FD.HIPOLIP | FP.HIPOLIP | TG.valor>150 | 
 # Generar variable event primari grup a risk: (seleccionar grups a risk només amb event primari)
 dades<- dades %>% group_by(caseid) %>% mutate(EV.PRM_grup=ifelse(sum(EV.ECV_PR==1),1,0)) %>% ungroup() 
 
+
 # Recodes automatics
 dades<-recodificar(dades,taulavariables = conductor_variables,criteris = "recodes")
 dades<-recodificar(dades,taulavariables = conductor_variables,criteris = "recodes2")
@@ -466,7 +470,6 @@ flow_chart_antic2<-diagramaFlowchart2G(pob_lab=pob_lab,
                                 exc_lab2=Labexcl_cas)
 
 flow_chart_antic2
-
 
 
 ###  Genero dades flowchat 2 excloent els events Insf cardiaca  ##
@@ -706,9 +709,9 @@ M1.reg.mis.ls.D<-extreure_model_logistic(x="regicor_mis",y="event",taulavariable
 
 ```{r regicor_plus}
 
-M2.reg.vars.ls<-extreure_model_logistic(x="regicor_vars",y="event",taulavariables=conductor_variables,dades=dades,valor_outcome=cat_event,conditional = T,strata = "caseid")
+M2.reg.vars.ls<-extreure_model_logistic(x="regicor_vars2",y="event",taulavariables=conductor_variables,dades=dades,valor_outcome=cat_event,conditional = T,strata = "caseid")
 # Numero de efectius amb variables regicor
-n_regicor_vars<-na.omit(selectorvariables("regicor_vars",taulavariables = conductor_variables,dades)) %>% count()
+n_regicor_vars<-na.omit(selectorvariables("regicor_vars2",taulavariables = conductor_variables,dades)) %>% count()
 
 M3.reg.plus.ls<-extreure_model_logistic(x="regicor_plus",y="event",taulavariables=conductor_variables,dades=dades,valor_outcome=cat_event,conditional = T,strata = "caseid")
 # Numero de efectius amb variables regicor_plus
@@ -740,22 +743,69 @@ ROC.reg.alone.plot <- ROC.reg.alone.plot + style_roc(theme = theme_grey) +
 ```{r regicor_joves, eval=T, include=F}
 dades_temp<-dades %>% filter(edat_grup=="Young:M<55/F<65")
 M1.reg.alon.G1.ls<-extreure_model_logistic(x="regicor_alone",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
-M2.reg.vars.G1.ls<-extreure_model_logistic(x="regicor_vars",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
+M2.reg.vars.G1.ls<-extreure_model_logistic(x="regicor_vars2",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
 M3.reg.plus.G1.ls<-extreure_model_logistic(x="regicor_plus",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
 
 ```
 
->- Evaluar Regicor Grup d'edat Joves (G2)
+>- Evaluar Regicor Grup d'edat Grans (G2)
 
 ```{r regicor_g2, include=F, eval=T}
 
 dades_temp<-dades %>% filter(edat_grup=="Old:M>=55/F>=65")
 M1.reg.alon.G2.ls<-extreure_model_logistic(x="regicor_alone",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
-M2.reg.vars.G2.ls<-extreure_model_logistic(x="regicor_vars",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
+M2.reg.vars.G2.ls<-extreure_model_logistic(x="regicor_vars2",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
 M3.reg.plus.G2.ls<-extreure_model_logistic(x="regicor_plus",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
 
 
 ```
+
+>- Evaluar Regicor Grup dones Joves (G3)
+
+```{r regicor_g3, eval=T, include=F}
+dades_temp<-dades %>% filter(edat_grup=="Young:M<55/F<65" & sexe=="D")
+
+M1.reg.alon.G3.ls<-extreure_model_logistic(x="regicor_alone",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
+M2.reg.vars.G3.ls<-extreure_model_logistic(x="regicor_vars2",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
+M3.reg.plus.G3.ls<-extreure_model_logistic(x="regicor_plus",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
+
+```
+
+>- Evaluar Regicor Grup dones Granss (G4)
+
+```{r regicor_g4, include=F, eval=T}
+
+dades_temp<-dades %>% filter(edat_grup=="Old:M>=55/F>=65" & sexe=="D")
+M1.reg.alon.G4.ls<-extreure_model_logistic(x="regicor_alone",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
+M2.reg.vars.G4.ls<-extreure_model_logistic(x="regicor_vars2",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
+M3.reg.plus.G4.ls<-extreure_model_logistic(x="regicor_plus",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
+
+
+```
+
+>- Evaluar Regicor Grup homes Joves (G5)
+
+```{r regicor_dones_joves, eval=T, include=F}
+dades_temp<-dades %>% filter(edat_grup=="Young:M<55/F<65" & sexe=="H")
+
+M1.reg.alon.G5.ls<-extreure_model_logistic(x="regicor_alone",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
+M2.reg.vars.G5.ls<-extreure_model_logistic(x="regicor_vars2",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
+M3.reg.plus.G5.ls<-extreure_model_logistic(x="regicor_plus",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
+
+```
+
+>- Evaluar Regicor Grup homes Granss (G6)
+
+```{r regicor_g6, include=F, eval=T}
+
+dades_temp<-dades %>% filter(edat_grup=="Old:M>=55/F>=65" & sexe=="H")
+M1.reg.alon.G6.ls<-extreure_model_logistic(x="regicor_alone",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
+M2.reg.vars.G6.ls<-extreure_model_logistic(x="regicor_vars2",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
+M3.reg.plus.G6.ls<-extreure_model_logistic(x="regicor_plus",y="event",taulavariables=conductor_variables,dades=dades_temp,valor_outcome=cat_event,conditional = T,strata = "caseid")
+
+
+```
+
 
 Conocer el porcentaje de personas que desarrollan el primer evento cardiovascular prematuro (< 55/65 años) de los que no se dispone de información clínica previa necesaria para para evaluar su riesgo cardiovascular mediante la ecuación REGICOR en los 5 años previos al mismo
 
@@ -791,9 +841,6 @@ formula<-formula_compare(x="regicor_vars_mis",y="edat_pre",taulavariables = cond
 taula_REGICOR_controls_grups<-descrTable(formula,data=dades_temp,show.p.overall = F,hide.no = "No",show.n = T,show.ratio = F,show.all = T)
 
 taula_REGICOR_controls_grups
-
-
-
 
 ```
 

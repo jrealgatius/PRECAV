@@ -20,43 +20,44 @@
 
 # ECV_CAT_entregable_cataleg_20190517_101801.rds
 
+
 funcions_lectura_dades<-function(mostra) {
 
   # Si mostra --> Llegir fitxers mostra
 if (mostra==T) {
 
   LLEGIR.PACIENTS<<-function(n=Nmostra) {
-    readRDS("./dades/sidiap_test/pacients_mostra.rds") %>% as_tibble() %>% head(n)}
+    readRDS("dades/sidiap_test"%>%here::here("pacients_mostra.rds")) %>% as_tibble() %>% head(n)}
   
   LLEGIR.PROBLEMES<<-function(n=Nmostra) {
-    readRDS("./dades/sidiap_test/PROBLEMES_mostra.rds")%>% as_tibble() %>% head(n)}
+    readRDS("dades/sidiap_test"%>%here::here("PROBLEMES_mostra.rds"))%>% as_tibble() %>% head(n)}
   
   LLEGIR.CMBDH<<-function(n=Nmostra) {
-    readRDS("./dades/sidiap_test/CMBDH_mostra.rds") %>% as_tibble() %>% head(n)}
+    readRDS("dades/sidiap_test"%>%here::here("CMBDH_mostra.rds")) %>% as_tibble() %>% head(n)}
   
   LLEGIR.padris<<-function(n=Nmostra) {
-    readRDS("./dades/sidiap_test/CMBDH_PROC_mostra.rds") %>% as_tibble() %>% head(n)}
+    readRDS("dades/sidiap_test"%>%here::here("CMBDH_PROC_mostra.rds")) %>% as_tibble() %>% head(n)}
   
   LLEGIR.PROC<<-function(n=Nmostra) {
-    readRDS("./dades/sidiap_test/CMBDH.padris_mostra.rds") %>% as_tibble() %>% head(n)}
+    readRDS("dades/sidiap_test"%>%here::here("CMBDH.padris_mostra.rds")) %>% as_tibble() %>% head(n)}
   
   LLEGIR.TABAC<<-function(n=Nmostra) {
-    readRDS("./dades/sidiap_test/TABAC_mostra.rds") %>% as_tibble() %>% head(n) }
+    readRDS("dades/sidiap_test"%>%here::here("TABAC_mostra.rds")) %>% as_tibble() %>% head(n) }
   
   LLEGIR.FX.FACTURATS<<-function(n=Nmostra) {
-    readRDS("./dades/sidiap_test/FX.FACTURATS_mostra.rds")%>% as_tibble() %>% head(n) }
+    readRDS("dades/sidiap_test"%>%here::here("FX.FACTURATS_mostra.rds"))%>% as_tibble() %>% head(n) }
   
   LLEGIR.FX.PRESCRITS<<-function(n=Nmostra) {
-    readRDS("./dades/sidiap_test/FX.PRESCRITS_mostra.rds")%>% as_tibble() %>% head(n) }
+    readRDS("dades/sidiap_test"%>%here::here("FX.PRESCRITS_mostra.rds"))%>% as_tibble() %>% head(n) }
   
   LLEGIR.VARIABLES<<-function(n=Nmostra) {
-    readRDS("./dades/sidiap_test/VARIABLES_mostra.rds")%>% as_tibble() %>% head(n) }
+    readRDS("dades/sidiap_test"%>%here::here("VARIABLES_mostra.rds"))%>% as_tibble() %>% head(n) }
   
   LLEGIR.CLINIQUES<<-function(n=Nmostra) {
-    readRDS("./dades/sidiap_test/CLINIQUES_mostra.rds")%>% as_tibble() %>% head(n) }
+    readRDS("dades/sidiap_test"%>%here::here("CLINIQUES_mostra.rds"))%>% as_tibble() %>% head(n) }
   
   LLEGIR.VISITES<<-function(n=Nmostra) {
-    readRDS("./dades/sidiap_test/VISITES_mostra.rds")%>% as_tibble() %>% head(n) }
+    readRDS("dades/sidiap_test"%>%here::here("VISITES_mostra.rds"))%>% as_tibble() %>% head(n) }
 }
 
   # Llegir fitxers globals
