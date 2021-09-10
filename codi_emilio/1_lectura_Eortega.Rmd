@@ -159,7 +159,6 @@ PACIENTS<-PACIENTS %>%
   as_tibble()
 
 
-
 ```
 
 # Criteri d'exclusió 2 antecedent CV a 2010
@@ -187,9 +186,7 @@ PACIENTS %>% group_by(ANT.event) %>% count() %>% kable(caption = "Criteri d'excl
 
 ```{r}
 
-
 data0_cohort<-"20100101"
-
 
 DM1_dt<-agregar_problemes_agr(dt=PROBLEMES_total,agregador = "E10",camp_agregador = "agr",bd.dindex = data0_cohort,dt.agregadors = CATALEG,finestra.dies=c(-Inf,0))
 FA_dt<-agregar_problemes_agr(dt=PROBLEMES_total,agregador = "FA",camp_agregador = "agr",bd.dindex = data0_cohort,dt.agregadors = CATALEG,finestra.dies=c(-Inf,0))
@@ -203,7 +200,6 @@ FA_dt %>% group_by(cod) %>% count() %>% kable(caption="Pacients amb FA previ 201
 
 PACIENTS<-PACIENTS %>% left_join(DM1_dt %>% transmute(idp,ANT.DM1=1),by="idp")
 PACIENTS<-PACIENTS %>% left_join(FA_dt %>% transmute(idp,ANT.FA=1),by="idp")
-
 
 
 
@@ -221,7 +217,7 @@ descrTable(PACIENTS,method = 2, Q1=0,Q3=1)
 ```
 
 
-# Agregar events i tipos de events en data d'event
+# Agregar només events i tipos de events en data d'event
 
 ```{r}
 bdades_index=PACIENTS %>% filter(event==1) %>% select(idp,event,dtindex=dtevent)
@@ -230,8 +226,7 @@ bdades_index=PACIENTS %>% filter(event==1) %>% select(idp,event,dtindex=dtevent)
 
 # Data index 
 
-# Canvi de diseny: dataindex per20100101
-
+# Canvi de diseny: ara dataindex per20100101
 
 #     6.2.1 Agregar Problemes (ECV Manel) ----------------
 problemesDG2_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex =bdades_index,dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),camp_agregador="AGR2",prefix = "EV.TIP.")
@@ -247,6 +242,8 @@ problemesEVSC_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex =bdades_index,d
 
 #     6.2.5 Agregar Problemes (Events Territorios) -----------------
 problemesEVTR_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex =bdades_index,dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),camp_agregador="EV_TER",prefix = "EV.TER.")
+
+
 ```
 
 # Agregar problemes de salut en data d'inici de cohort (20100101)
@@ -254,7 +251,6 @@ problemesEVTR_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex =bdades_index,d
 > Comorbiditat en data inici de cohort 
 
 ```{r}
-
 
 #     6.2. Agregar Problemes(Agrupadors antics) ----------------
 problemes_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex = "20100101",dt.agregadors=CATALEG,finestra.dies=c(-Inf,0))
@@ -269,6 +265,9 @@ problemesATERO_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex = "20100101",d
 
 # Fusionar tots els problemes de Salut per alliberar memoria
 
+- Segons bdades_index
+- Només en events
+
 ```{r}
 
 BDTOTAL<-bdades_index %>%
@@ -282,17 +281,36 @@ BDTOTAL<-bdades_index %>%
 
 gc()
 
-BDTOTAL %>% distinct(idp)
-
 descrTable(BDTOTAL,method = 2, Q1=0,Q3=1)
 
 
 ```
+
+# Fusionar tots els problemes de Salut a POBLACIÓ 
+
+- Ara fer el mateix a base de dades POBLACIONAL
+
+```{r}
+
+PACIENTS<-PACIENTS %>%
+  left_join(select(problemes_bd,-dtindex), by=c("idp")) %>% 
+  left_join(select(problemesDG2_bd,-dtindex), by=c("idp")) %>% 
+  left_join(select(problemesEVPR_bd,-dtindex), by=c("idp")) %>% 
+  left_join(select(problemesEVAM_bd,-dtindex), by=c("idp")) %>% 
+  left_join(select(problemesEVSC_bd,-dtindex), by=c("idp")) %>% 
+  left_join(select(problemesEVTR_bd,-dtindex), by=c("idp")) %>% 
+  left_join(select(problemesATERO_bd,-dtindex), by=c("idp"))
+
+
+
+```
+
+
 # Agregar visites (Any anterior) 
 
 ```{r}
 #     6.1. Agregar visites (Any anterior) -------------
-VISITES<-Nmostra %>% LLEGIR.VISITES() %>% semi_join(bdades_index,by="idp")
+VISITES<-Nmostra %>% LLEGIR.VISITES() 
 
 visites_bd<-agregar_visites(dt=VISITES,bd.dindex = "20100101",finestra.dies=c(-365,-45)) %>% select(-dtindex)
 rm(VISITES)
@@ -304,15 +322,15 @@ rm(VISITES)
 
 ```{r}
 # 6.4. Agregar Variables ---------------
-VARIABLES<-Nmostra %>% LLEGIR.VARIABLES %>% select(idp,cod,val,dat) %>% semi_join(bdades_index,by="idp")
+VARIABLES<-Nmostra %>% LLEGIR.VARIABLES %>% select(idp,cod,val,dat) 
 variables_bd<-agregar_analitiques(dt=VARIABLES,bd.dindex = "20100101",finestra.dies=c(-365,0)) %>% select(-dtindex)
 
 #     6.5. Agregar Cliniques ---------------
-CLINIQUES<-Nmostra %>% LLEGIR.CLINIQUES %>% select(idp,cod=agr,val,dat) %>% semi_join(bdades_index,by="idp")
+CLINIQUES<-Nmostra %>% LLEGIR.CLINIQUES %>% select(idp,cod=agr,val,dat) 
 cliniques_bd<-agregar_analitiques(dt=CLINIQUES,bd.dindex = "20100101",finestra.dies=c(-365,0)) %>% select(-dtindex)
 
 #     6.6.1 Agregar TABAC ---------------------------
-TABAC<-Nmostra %>% LLEGIR.TABAC %>% mutate(cod="tab") %>% semi_join(bdades_index,by="idp")
+TABAC<-Nmostra %>% LLEGIR.TABAC %>% mutate(cod="tab") 
 tabac_bd<-agregar_analitiques(dt=TABAC,bd.dindex = "20100101",finestra.dies=c(-Inf,0)) %>% select(-dtindex)
 gc()
 ```
@@ -321,7 +339,8 @@ gc()
 
 ```{r}
 #     6.7. Agregar Farmacs Facturació en data / 1 any previ---------------------------
-FX.FACTURATS<-Nmostra %>% LLEGIR.FX.FACTURATS %>% semi_join(bdades_index,by="idp")
+FX.FACTURATS<-Nmostra %>% LLEGIR.FX.FACTURATS 
+
 farmacs_dispensats<-agregar_facturacio(dt=FX.FACTURATS,prefix = "FD.",bd.dindex = "20100101",finestra.dies=c(-365,-45),dt.agregadors=CATALEG) %>% select(-dtindex)
 
 farmacs_dispensats_antiHTA<-agregar_facturacio(dt=FX.FACTURATS,prefix = "FD.",bd.dindex = "20100101",finestra.dies=c(-365,-45),dt.agregadors=CATALEG,camp_agregador="antiHTA") %>% select(-dtindex)
@@ -330,7 +349,7 @@ rm(FX.FACTURATS)
 gc()
 
 #     6.8. Agregar Farmacs Prescrits en data/ 365 dies previs ----------------------
-FX.PRESCRITS<-Nmostra %>% LLEGIR.FX.PRESCRITS %>% semi_join(bdades_index,by="idp")
+FX.PRESCRITS<-Nmostra %>% LLEGIR.FX.PRESCRITS 
 farmacs_prescrits<-agregar_prescripcions(dt=FX.PRESCRITS,bd.dindex=bdades_index,dt.agregadors=CATALEG,prefix="FP.",finestra.dies = c(-45,-45)) %>% select(-dtindex)
 
 farmacs_prescrits_antiHTA<-agregar_prescripcions(dt=FX.PRESCRITS,bd.dindex=bdades_index,dt.agregadors=CATALEG,prefix="FP.",finestra.dies = c(-45,-45),camp_agregador="antiHTA") %>% select(-dtindex)
@@ -374,6 +393,32 @@ descrTable(BDTOTAL,method=2,Q1=0,Q3=1)
 
 ```
 
+# Formatejar i unir BDPACIENTS  --------------
+
+```{r}
+
+#   7.1. Formatejar dtindex a numeric BDTOTAL --------------
+
+PACIENTS<- PACIENTS %>% 
+  left_join(select(bdades_index,-event), by="idp") %>% 
+  left_join(variables_bd, by=c("idp")) %>% 
+  left_join(cliniques_bd, by=c("idp")) %>% 
+  left_join(tabac_bd, by=c("idp")) %>% 
+  left_join(farmacs_dispensats, by=c("idp")) %>% 
+  left_join(farmacs_dispensats_antiHTA, by=c("idp")) %>% 
+  left_join(farmacs_prescrits, by=c("idp")) %>% 
+  left_join(farmacs_prescrits_antiHTA, by=c("idp")) %>% 
+  left_join(visites_bd, by=c("idp")) 
+
+
+
+# Convert a data 
+
+descrTable(PACIENTS,method=2,Q1=0,Q3=1)
+
+
+
+```
 
 
 # Salvar taulaes planes events i població (BDTOTAL / PACIENTS)
