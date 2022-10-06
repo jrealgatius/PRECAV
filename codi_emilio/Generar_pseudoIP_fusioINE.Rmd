@@ -1,0 +1,139 @@
+---
+title: "Generar PseudoID i fusió amb mortalitat INE"
+author: "Jordi Real"
+date: "3/6/2022"
+output: html_document
+params: 
+  mostra: FALSE
+
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+
+# Llegeixo les funcions de lectura de dades
+source(here::here("sintaxis","global_lectura.R"))
+funcions_lectura_dades(mostra=params$mostra)  # Lect
+
+
+```
+
+## R Markdown
+
+
+```{r lectura_emilio_mostra}
+
+
+dades<-readRDS(here::here("dades/emilio","dt_plana.RDS"))
+
+#  Llegir PACIENTS, I PROBLEMES DE SALUT
+dades<-PACIENTS<-Inf %>% LLEGIR.PACIENTS()
+
+
+```
+
+
+# Test de si puc fusionar diferents base de dades (Exitus)
+
+```{r pseudoID_PRECAV, eval=TRUE}
+# Exitus PRECAV generar identificació amb historics
+dt_planaPRECAV<-dades %>% filter(situacio=="D") %>% 
+  filter(sortida>=20100101) %>% 
+  filter(dnaix>=19350101 & dnaix<=19810101) 
+
+
+# montar pseudoidp per morts amb combinació de variables
+dt_planaPRECAV<-dt_planaPRECAV %>% mutate(pseudoID=paste0(dnaix,sexe,entrada,sortida)) 
+
+dt_planaPRECAV %>% distinct(pseudoID)
+
+#
+# Obrir historics de problemes de salut i fer combinatoria suma de dates de codis mes prevalents
+source(here::here("sintaxis","global_lectura.R"))
+funcions_lectura_dades(mostra=params$mostra)  # Lect
+dt_problemes_exitus<-Nmostra %>% LLEGIR.PROBLEMES() %>% semi_join(dt_planaPRECAV,by="idp")
+
+dt_planaPRECAV %>% mutate(any_exitus=year(ymd(sortida))) %>% count(any_exitus)
+
+
+```
+
+```{r pseudoID_DH, eval=TRUE}
+# Exitus Data harmonization (Generar identificació amb historics)
+fitxer<-"E:/GoDrive/CIBERDEM/DHarmonization/dades/dades_DH.rds"
+dt_planaDH<-readRDS(fitxer) %>% filter(situacio=="D") %>% 
+  filter(sortida>=20100101) %>% 
+  filter(dnaix>=19350101 & dnaix<=19810101) %>% 
+  filter(sortida<=20161231)
+
+dt_planaDH %>% mutate(any_exitus=year(ymd(sortida))) %>% count(any_exitus)
+
+# montar pseudoidp amb combinació de variables
+dt_planaDH <- dt_planaDH %>% mutate(pseudoID=paste0(dnaix,sexe,entrada,sortida)) 
+
+dt_planaDH %>% distinct(pseudoID)
+
+# Miro de fusionar capturo pseudoID de DH 
+dt_fusio<-dt_planaPRECAV %>% transmute(idp_precav=idp,pseudoID,precav=1)%>% 
+  left_join(transmute(dt_planaDH,idp,pseudoID,DH=1),
+            by="pseudoID")
+
+dt_planaPRECAV %>% select(pseudoID)
+dt_planaDH %>% select(pseudoID)
+
+dt_fusio<-dt_fusio %>% 
+  mutate(precav=if_else(is.na(precav),0,1),
+                    DH=if_else(is.na(DH),0,1))
+
+table(dt_fusio$precav)
+table(dt_fusio$DH)
+table(dt_fusio$precav,dt_fusio$DH)
+
+dt_fusio %>% filter(DH==1) %>% distinct(idp)
+
+```
+
+
+```{r pseudoID_DH2, eval=TRUE}
+
+# Obrir historic de variables 
+directori_dades<-"E:/GoDrive/CIBERDEM/DHarmonization/dades/sidiap/test"
+LLEGIR.variables_cliniques<-
+  readRDS(paste0(directori_dades,"/DAPCRMM_entregable_variables_cliniques_20190926_103409.rds")) %>% semi_join(dt_planaDH,by="idp")
+LLEGIR.variables_analitiques<-
+  readRDS(paste0(directori_dades,"/DAPCRMM_entregable_variables_analitiques_20190926_103409.rds")) %>% semi_join(dt_planaDH,by="idp")
+LLEGIR.diagnostics<-
+  readRDS(paste0(directori_dades, "/DAPCRMM_entregable_diagnostics_20190926_103409.rds")) %>% semi_join(dt_planaDH,by="idp")
+
+LLEGIR.diagnostics %>% distinct(cod)
+# Codis demanats / existents tant a DH com a PRECAV
+codis_comuns<-dt_problemes_exitus %>% distinct(cod) %>% inner_join(LLEGIR.diagnostics %>% distinct(cod)) 
+
+# Generar idp_DG amb combinacio de diagnostics
+pp<-LLEGIR.diagnostics %>% semi_join(codis_comuns,by="cod") %>% 
+  select(idp,cod,dat) %>% group_by(idp,cod) %>% slice(which.min(dat)) %>% ungroup() %>% 
+  pivot_wider(names_from = cod,values_from = dat) %>% 
+  replace(is.na(.), 0) %>% 
+  mutate(id_diagnostics = rowSums(across(where(is.numeric)))) %>% select(idp,id_diagnostics)
+
+
+
+
+# montar pseudoidp amb combinació de variables
+dt_planaDH %>% select(idp,sexe,dnaix,entrada,sortida,dnaix) %>% left_join(pp) %>% replace(is.na(.), 0) %>% 
+  mutate(pseudoID=paste0(dnaix,sexe,entrada,sortida,id_diagnostics)) %>% distinct(pseudoID)
+
+
+# Descriptiva #
+
+dt_planaPRECAV %>% mutate(any_exitus=year(ymd(sortida))) %>% count(any_exitus)
+dt_planaDH %>% mutate(any_exitus=year(ymd(sortida))) %>% count(any_exitus)
+
+
+
+
+```
+

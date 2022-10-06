@@ -17,7 +17,10 @@ output:
       in_header: header.html
 
 params: 
-  mostra: FALSE
+  mostra: TRUE
+  subgrup: "Overall"  # "Overall" "DM1" "DM2"
+subtitle: "`r params$subgrup`"
+
 
 ---
 
@@ -34,7 +37,7 @@ params:
 <div class="watermark">DRAFT</div>
 
 
-```{r htmltemplate, echo=FALSE}
+```{r htmltemplate, echo=FALSE, message=FALSE}
 img<-htmltools::img(src = knitr::image_uri(file.path("logos_css", "logo.jpg")), 
                alt = 'logo', 
                style = 'position:absolute; text-align: center;padding-right:150px;width: 185px;padding:10px;')
@@ -43,10 +46,10 @@ htmlhead <- paste0('
   document.write(\'<div class="logos">',img,'</div>\')
   </script>
   ')
-readr::write_lines(htmlhead, path = "header.html")
+readr::write_lines(htmlhead, file = "header.html")
+
+
 ```
-
-
 
 
 ****
@@ -55,25 +58,85 @@ readr::write_lines(htmlhead, path = "header.html")
 
 **Actualitzat**
 
-> 04/12/2020
+> 20/09/2022
+
+- Colesterol remanente (Arreglar valors negatius): 
+
+Alguns colesterol totals que no son del mateix dia que LDL i HDL. A demés hi han dos colesterols diferents el mateix dia. 
+Només es calcularà remanente quan LDL I HDL I COLTOTAL del mateix dia. Valors negatius i 0 ->  missings
+
+
+- Canvi d'unitats en Colesterols per millor lectura / interpretació de HR
+- Canvis de categories de referencia
+
+**Realizat**
+
+> 06/09/2022
+
+- Arreglar error en formula col_noHDL
+- Reclassificar DM1, eliminant els que prenen METformina
+- nova variable agrupada de HbA1c
+
+> 25/07/2022
+
+- Descriure codis que inclouen esdeveniment Cardiovascular ECV
+- Distribució de la població per grups d'edat i sexe
+- Reordenar grups d'edatXsexe
+- Generar noves variables: 
+    - Grups de risc Score2 segons articles
+    - Tractament DM (No Fx, Mono, Combo noInsu, ADNI + Insul, Insulina Mono)
+    - Rango	HbA1c (<7.5, 7.5-8.5, >8.5)  
+- Generar noves taules 
+  - Taules: HRs de factors de risc per grups d'edat i sexe (14 taules noves. Apartats 3.5.1-5)
+
+
+
+
+17/07/2022
+
+- Reclassificació de DM1 DM2 segons criteris acordats. Revisada classificació
+- Nou agrupador de DM2 que inclou altres tipus de DM
+- Fusionar Prescripció + Dispensació 
+- Nou criteri d'inclusió (Rang d'edat >=30 <=89 anys a 2010) 
+- SCORE2 + actualitzar  SCORE-OP (Verificació)
+- Actualitzar noves taules (Població general  + los events)
+- Calcular incidencia variables taula 1 i HR
+- Reordenar apartat resultats en (3. Cohorte 2010, 4. Analisis eventos, 5. Fallecidos)
+- Programació robusta per 3 Informes (DM1 / DM2 / Global)
+
+
+30/06/2022
+
+&check; Creació de noves variables  <br/>
+
+- MICRO
+- MACRO (AVC, AP, IC, CI)
+- Grups d'antidiabetics (NIDA, insulinas etc...)
+- Duració de DM1 i temps DM2
+- Score2
+
+10/05/2022
+
+&check; Actualitzar events CV amb informació del INE segons la causa  <br/>
+
+
+04/12/2020
 
 &check; Construir COHORT amb tota la població a 01/2010  <br/>
 &check; Agregar variables <br/>
 
-> 28/09/2020
+28/09/2020
 
 &check; Detectat error en desquadre de taules descriptiva ECV vs taules d'incidencia (duplicats pacients)  <br/>
 &check; Corregit error en codi (codis cataleg duplicats) <br/>
 &check; Generació d'informe <br/> 
 
-**Realizat**
-
->24/09/2020
+24/09/2020
 
 &check; Añadida HTA en tablas <br/> 
 &check; Añadidos p-valores en diferenciación por territorios <br/> 
 
->01/09/2020
+01/09/2020
 
 &check; Cambio de priorización de eventos CV registrados en E-Cap: 
 
@@ -87,15 +150,14 @@ readr::write_lines(htmlhead, path = "header.html")
   - Ins Cardiava: 1. Insuficiencia Cardiaca Congestiva, 2. No Congestiva
   - Periferica: 1. ArtPEr , 2. Arterper_C, 3. RVP
 
->24/08/2020
+24/08/2020
 
 &check; Nuevos agregadores. Generar nuevas variables de Insuficiencia Card Congestiva y No <br/>
 &check; Descriptiva de fallecidos (Con y sin evento CV previo)  <br/>
 &check; Añadidas 4 tablas descriptivas de las características basal por grupos de edad y sexo son sus p <br/>
 &check; Calculados HR por evento y forest plot <br/>
 
-
->31/07/2020
+31/07/2020
 
 &check; Tablas estraficadas todas por sexo <br/>
 &check; Figuras estratificadas por sexo <br/>
@@ -103,21 +165,22 @@ readr::write_lines(htmlhead, path = "header.html")
 &check; Quartiles <br/>
 
 
->22-26/07/2020
+22-26/07/2020
 
 &check; Seleccionar un solo evento por paciente-dia segun criterios:(CMBDH posición más baja, E-CAP:1. Card Isquémica,2.ICTUS,3.IC, 4.Peripheral ter (Cualquiera de los códigos)) <br/>
 &check; Añadir 3 tablas estratificadas por sexos (tabla 2.2, 2.3, 2.4) <br/>
 &check; Tablas 3 4 5 (Recalculo % sobre eventos). Cambio de denominadores <br/>
 
 
->09/07/2020
+09/07/2020
 
 &check; **!!! CANVI DE DISSENY** Cas-control-> Cohort amb data d'entrada 01/2010 <br/>
 &check; Agregació de caracteristiques basals en 01/2010  <br/>
 &check; Actualització de resultats <br/>
 &check; TAules per territoris <br/>
 
-> 06/07/2020
+
+06/07/2020
 
 &check; Nou catàleg de variables  <br/>
 &check; Generar noves variables segons agrupadors nous  <br/>
@@ -125,7 +188,7 @@ readr::write_lines(htmlhead, path = "header.html")
 &check; Actualitzar anàlisis  <br/>
 
 
-> 02/06/2020
+02/06/2020
 
 &check; Selecció d'esdeveniments CV.  <br/>
 &check; Eliminats filtres per edat  <br/>
@@ -135,9 +198,9 @@ readr::write_lines(htmlhead, path = "header.html")
 
 **Pendent**
 
-* Determinació de N definitiva 
-* Revisió i depuració d'errors
-* Edició de taules 
+* Revisar taules de l'informe
+* Decidir variables que falten en les taules
+* Redacció de primer article
 
 # 1. Objectius
 
@@ -145,8 +208,12 @@ readr::write_lines(htmlhead, path = "header.html")
 
 - Estimate incidence of the first clinical manifestation of cardiovascular disease
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE,warning=F}
 knitr::opts_chunk$set(echo = FALSE,include=T,warning=F, message = FALSE)
+
+
+options(scipen=999)
+
 
 library(lubridate)
 
@@ -159,23 +226,128 @@ conductor_variables<-here::here("variables_emilio.xls")
 ```
 
 
-```{r lectura}
-load(here::here("dades/emilio","dt_plana.RData"))
+```{r lectura, warning=FALSE,message=FALSE,include=FALSE}
+# load(here::here("dades/emilio","dt_plana.RData"))
 
 # dades<-PACIENTS %>% select(-event) %>% right_join(BDTOTAL,by="idp")
 # dades<-PACIENTS %>% filter(event==1)
 
-dades<-PACIENTS
+if (params$mostra==T) dir<-"dades/emilio/mostra" else dir<-"dades/emilio"
+
+dades<-readRDS(here::here(dir,"dt_plana.RDS"))
 
 # dades %>% select(idp) %>% distinct()
 # BDTOTAL %>% select(idp) %>% distinct()
 
-#
+```
 
+
+
+
+
+```{r arreglar_cataleg, eval=FALSE}
+
+# -idp - identificador de paciente
+# -dexitus - Fecha Defunción
+# -Cexitus - Causa de muerte
+# -CM_Inm - Causas Múltiples (Inmediata)
+# -CM_Int_B - Causas Múltiples (Intermedia B)
+# -CM_Int_C - Causas Múltiples (Intermedia C)
+# -CM_Fun - Causas Múltiples (Fundamental)
+# -CM_Otr - Causas Múltiples (Otros Procesos)
+
+#dt_temp<-dades
+
+vars<-c("Cexitus", "CM_Inm" , "CM_Int_B" , "CM_Int_C", "CM_Fun", "CM_Otr")
+
+popa<-c("Cexitus", "CM_Inm" , "CM_Int_B" , "CM_Int_C", "CM_Fun", "CM_Otr") %>% 
+  map(~sym(.x)) %>%
+  map(
+    ~dt_temp %>% group_by(!!.x) %>% count() %>% ungroup
+    )
+
+dt_temp1<-
+  readxl::read_excel(here::here("codi_emilio","PRECAP_Codis_mortalitat_INE.xls"),sheet = 1) %>% 
+  transmute(tipus=vars[1],cod=Cexitus,CIE10,agr=Agrupador_CIE10_mapeo,AGR2,AGR_PR,AGR_AMP,AGR_SEC,AGR_TER)
+
+dt_temp2<-
+  readxl::read_excel(here::here("codi_emilio","PRECAP_Codis_mortalitat_INE.xls"),sheet = 2) %>% 
+  transmute(cod=CM_Inm) %>% na.omit() %>% mutate(tipus=vars[2])
+
+dt_temp3<-readxl::read_excel(here::here("codi_emilio","PRECAP_Codis_mortalitat_INE.xls"),sheet = 3) %>% 
+  select(1) %>% rename("cod"=1) %>% na.omit() %>% mutate(tipus=vars[3])
+
+dt_temp4<-readxl::read_excel(here::here("codi_emilio","PRECAP_Codis_mortalitat_INE.xls"),sheet = 4) %>% 
+  select(1) %>% rename("cod"=1) %>% na.omit() %>% mutate(tipus=vars[4])
+
+dt_temp5<-readxl::read_excel(here::here("codi_emilio","PRECAP_Codis_mortalitat_INE.xls"),sheet = 5) %>% 
+  select(1) %>% rename("cod"=1) %>% na.omit() %>% mutate(tipus=vars[5])
+
+dt_temp6<-readxl::read_excel(here::here("codi_emilio","PRECAP_Codis_mortalitat_INE.xls"),sheet = 6) %>% 
+  select(1) %>% rename("cod"=1) %>% na.omit() %>% mutate(tipus=vars[6])
+
+#
+dt_temp7<-
+  dt_temp2 %>% 
+  bind_rows(dt_temp3) %>% bind_rows(dt_temp4) %>% bind_rows(dt_temp5) %>% bind_rows(dt_temp6)
+
+#
+dt_temp7<-dt_temp7 %>% distinct(cod) 
+
+dt_temp8<-
+  dt_temp1 %>% full_join(dt_temp7, by="cod") %>% 
+  mutate(tipus=if_else(is.na(tipus),"CMultiples",tipus))
+
+
+dt_temp8 %>% filter(tipus=="CMultiples")
+dt_temp8 %>% write.csv2("Cataleg_codis_mortalitat_INE.csv",na="")
+
+
+dt_temp1<-
+  readxl::read_excel(here::here("codi_emilio","PRECAP_Codis_mortalitat_INE.xls"),sheet = 1) %>% 
+  select(cod=Cexitus,Descr1=Descripcion...5,Descr2=Descripcion...11) 
+
+dt_temp_bo<-
+  readxl::read_excel(here::here("codi_emilio","Cataleg_codis_mortalitat_INE.xls"),sheet = 1) 
+
+dt_temp_bo<-dt_temp_bo %>% left_join(dt_temp1,by="cod")
+
+# writexl::write_xlsx(dt_temp_bo,here::here("codi_emilio","Cataleg_codis_mortalitat_INE_mod.xlsx"))
+
+```
+
+
+```{r capturar_agregador_INE, eval=FALSE}
+
+# Fem cas unicament a data de mortalitat SIDIAP
+dt_codis_INE<-
+  readxl::read_excel(here::here("cataleg_precav_emilio.xls"),sheet = "codis_INE") %>% 
+  select(tipus,
+         Cexitus=cod,
+         agr.exitus=agr,AGR2.exitus=AGR2,AGR_PR.exitus=AGR_PR,AGR_AMP.exitus=AGR_AMP,AGR_SEC.exitus=AGR_SEC,AGR_TER.exitus=AGR_TER) 
+
+
+# només CV Cexitus (S'ignoren causes múltiples)
+dt_codis_INE %>% 
+  filter(is.na(agr.exitus) | !is.na(AGR2.exitus) | !is.na(AGR_PR.exitus) | !is.na(AGR_AMP.exitus) | !is.na(AGR_SEC.exitus) | !is.na(AGR_TER.exitus))
+
+# Caputurem agregadors d'events CV
+dt_exitus_INE<-
+  dades %>% filter(situacio=="D") %>% 
+  select(idp,situacio,sortida) %>% 
+  left_join(dt_mortalitat_ine,by="idp") %>% 
+  left_join(dt_codis_INE,by="Cexitus") %>%  
+  select(-c(tipus,dexitus,CM_Inm,CM_Int_B,CM_Int_C,CM_Fun,CM_Otr)) %>% 
+  select(-c(situacio,sortida))
+
+# Llistat de codis no classificats
+dt_codis_INE %>% filter(is.na(agr.exitus)) %>% select(Cexitus) %>% 
+  kable(caption = "Llistat de codis de mortalitat no classificats en cap agregador") %>% kableExtra::kable_classic_2()
 
 
 
 ```
+
 
 
 ```{r funcio_forestplot, include=FALSE}
@@ -247,6 +419,137 @@ forest.plot.HR<-function(dadesmodel=dt_estimacions,label="Categoria",mean="estim
 ```
 
 
+
+
+```{r Genero_criteris}
+
+# Considero data0 d'inici cohort 2010/01/01
+data0_cohort<-20100101
+
+dades<-dades %>% 
+  mutate (ANT.event=ifelse(dtevent<=data0_cohort,1,0)) %>% 
+  mutate (ANT.event=ifelse(is.na(dtevent), 0, ANT.event)) %>% 
+  mutate (event=ifelse(dtevent>data0_cohort,1,0)) %>% 
+  mutate (event=ifelse(is.na(dtevent),0, event)) %>%  
+  mutate (dtindex=ifelse(event==1,dtevent,NA)) 
+
+
+# # Mini descriptiva
+# PACIENTS %>% group_by(ANT.event) %>% count() %>% kable(caption = "Criteri d'exclusió 2 antecedent CV a 2010") 
+
+
+```
+
+```{r solapar_prescripcio_dispensacio}
+
+dt_temp<-dades
+
+## Solapar facturació i prescripció
+vars_dispens<-dades %>% select(starts_with("FD.")) %>% names() %>% sort()
+vars_precrip<-dades %>% select(starts_with("FP.")) %>% names() %>% sort()
+
+
+dt_temp2<-purrr::map2_dfc(vars_precrip,vars_dispens,
+                  ~transmute(dades,!!sym(.x):=ifelse(!!rlang::sym(.y)>0 | !!rlang::sym(.x)>0,1,0))
+                 ) 
+# Ara intercanviar columnes 2 a 2 de les noves dades generades
+dt_temp[vars_precrip]<-dt_temp2[vars_precrip]
+
+# Igualar a dades
+dades<-dt_temp
+
+
+```
+
+
+
+
+```{r reclassificacioDM, eval=TRUE, include=FALSE}
+
+# CANVI DE VARIABLE --> DG.xx < --ANT.xx 
+dades<-dades %>% mutate(DG.DM2=ANT.DM2, DG.DM1=ANT.E10)
+
+# faig copia en DG.E10
+dt_temp<-dades
+
+# dades %>% filter(DG.DM1>0) %>% count()
+# dades %>% filter(DG.DM2>0) %>% count()
+# dt_temp %>% filter(DG.DM1>0 & (FP.INSULINAS>0 | FD.INSULINAS))
+# dt_temp %>% filter(DG.DM1>0)
+
+# Reclassificació DM1 (Si no porten insulina NO son DM1 (tots DM1 han de portar insulina))
+dt_temp<-dt_temp %>% 
+  mutate(DG.DM1=if_else(FP.INSULINAS>0 | FD.INSULINAS>0,DG.DM1,NA_integer_)) %>% 
+  mutate(FP.NIAD_2=if_else(FP.SGLT2>0 | FP.IDPP4>0 | FP.GLP1>0 | FP.AGI>0 | FP.SU>0 | FP.TZD>0,1,0,missing = 0)) %>% 
+  mutate(DG.DM1=if_else(FP.NIAD_2==1,NA_integer_,DG.DM1,missing =DG.DM1 ))
+
+
+# Reclassificació dels que tenen Doble diagnostic (DM1 + DM2)
+
+## EDAT: Menors de 30 al diagnostic --> DM1
+dt_temp<-
+  dt_temp %>% 
+  mutate(edat_DM=((ymd(pmin(DG.DM1,DG.DM2))-ymd(dnaix))/365.25) %>% as.numeric()) %>% 
+  mutate(DG.DM2=if_else(DG.DM1>0 & DG.DM2>0 & edat_DM<=30,NA_integer_,DG.DM2,missing = DG.DM2)) 
+  
+## IMC: IMC>28 --> DM2 
+dt_temp<-
+  dt_temp %>%  
+  mutate(DG.DM1=if_else(DG.DM1>0 & DG.DM2>0 & !is.na(IMC.valor) & IMC.valor>28,NA_integer_,DG.DM1,missing =DG.DM1 )) %>% 
+  mutate(DG.DM2=if_else(DG.DM1>0 & DG.DM2>0 & !is.na(IMC.valor) & IMC.valor<=28,NA_integer_,DG.DM2,missing = DG.DM2)) 
+
+
+## Davant DUBTE MANA DM2 (Més prevalent)
+dt_temp<-dt_temp %>% mutate(DG.DM1=if_else(DG.DM1>0 & DG.DM2>0,NA_integer_,DG.DM1,missing =DG.DM1)) 
+
+## Si un DM1 porta Metformina no pot ser DM1
+dt_temp<- dt_temp %>% mutate(DG.DM1=if_else(DG.DM1>0 & FP.Metformina==1,NA_integer_,DG.DM1,missing = DG.DM1))
+
+# # Verificacions
+# dt_temp %>% filter(DG.DM2>0 & DG.DM_O>0) %>% select(DG.DM2,DG.DM_O)
+# 
+# dt_temp %>% filter(DG.DM2>0)
+# dt_temp %>% filter(DG.DM_O>0)
+# #
+# dt_temp %>% filter(DG.DM2>0 | DG.DM_O>0)
+# dt_temp %>% filter(DG.DM_O>0 & is.na(DG.DM2))
+# 
+# table(dt_temp$DG.DM2>0)
+# table(dt_temp$DG.DM1>0)
+
+# copio dades 
+dades<-dt_temp
+
+# DOBLE DG DG.DM_O I ANT.DM2 agafara 
+
+
+
+```
+
+
+
+```{r calcular_tempsDM2010}
+# 
+
+# Eliminar aquest criteri donat que ja s'inclou per agrupador
+
+# # Incloure dins de DM2 (DG.DM2) Altres DM (DG.DM_O)
+# dades<-dades %>% mutate(DG.DM2=ifelse(!is.na(DG.DM_O) & is.na(DG.DM2),DG.DM_O,DG.DM2))
+
+# Calcul de temps DM2
+dades<-dades %>% mutate(Duracion_DM2 = as.period(interval(start = ymd(DG.DM2), end = ymd(20100101))) %>% time_length("year")) 
+
+# Calcul de temps DM1
+dades<-dades %>% mutate(Duracion_DM1 = as.period(interval(start = ymd(DG.DM1), end = ymd(20100101))) %>% time_length("year")) 
+
+
+
+
+
+```
+
+
+
 ```{r calculs1_dades}
 ##  Calcular edat 
 dades<-dades %>% 
@@ -273,11 +576,83 @@ dades<-dades %>% mutate_at(vars(starts_with("DG.")),
 
 # Events
 dades<-dades %>% mutate_at(vars(starts_with("EV.")), 
-                           ~if_else(is.na(.) | .==0,0,1) ) 
+                           ~if_else(is.na(.) | .==0,0,1) )
 
+
+
+
+```
+
+```{r tractamentAntidiabetic, include=FALSE}
+
+
+
+# FP.NIAD
+# FP.NIAD_2
+# FP.Metformina
+
+# FP.SGLT2
+# FP.IDPP4
+# FP.GLP1
+# FP.AGI
+# FP.SU
+# FP.TZD
+
+# FP.ADO
+# FP.INSULINAS
+
+dt_temp <- dades %>% mutate(
+  Num_ADO = rowSums(across(c("FP.SGLT2","FP.IDPP4", "FP.GLP1","FP.AGI","FP.SU","FP.TZD","FP.Metformina")),na.rm = T),
+  Tractament_AD= case_when(
+            FP.NIAD==0 & FP.INSULINAS==0 & Num_ADO==0 ~ 0,
+            Num_ADO==1 & FP.INSULINAS==0 ~ 1,
+            Num_ADO>=2 & FP.INSULINAS==0 ~ 2,
+            Num_ADO==0 & FP.INSULINAS==1 ~ 3,
+            Num_ADO>=1 & FP.INSULINAS==1 ~ 4, 
+            TRUE ~ 0
+      )
+    )
+
+# # Verificació
+# dt_temp %>% filter(Tractament_AD>0)
+# dades %>% filter(is.na(Tractament_AD)) %>% 
+#   select(Tractament_AD,FP.NIAD,FP.INSULINAS,Num_ADO,c("FP.SGLT2","FP.IDPP4", "FP.GLP1","FP.AGI","FP.SU","FP.TZD","FP.Metformina"))
+# 
+# table(dades$Tractament_AD) %>% sum()
+
+
+
+dades <-dt_temp
+
+
+
+
+```
+
+
+
+```{r exitusCV, include=FALSE}
+
+# En el cas poblacional no estará actualizat
+
+
+
+# dades %>% filter(exitus==1 | event==1) %>% 
+#   select(idp,event,situacio,dtevent,sortida,exitus,Cexitus,cod_tipo,codindex,cod_terr,agr_exitus)
+
+# Primer event mortal CV. Si es primer event CV, hi ha un exitus i aquest es en la mateixa data 
+dades<-dades %>% mutate(exitus_first_CV=if_else(event==1 & situacio=="D" & dtevent==sortida,"Yes","No")) 
+
+
+
+  
+```
+
+```{r calculs1.2_dades}
 # Càlcul de número d'events Terciaris
 dades<-dades %>% mutate(
   EV.TER_SUM = rowSums(select(., starts_with("EV.TER."))))
+
 
 # Recode EV.TER_SUM
 dades<-dades %>% mutate(
@@ -295,21 +670,32 @@ dades<-dades %>% mutate(
 dades<-dades %>% mutate(
   EV.TIP_multi = case_when(
   EV.TIP_SUM==1~"1 ECV",
-  EV.TIP_SUM>1~">=2 ECVs")
-  )
+  EV.TIP_SUM>1~">=2 ECVs"))
+
+
+
+```
+
+
+```{r calculs1.3_dades}
 
 # visites 
-dades<-dades %>% mutate_at(vars(starts_with("visites_")), 
-                           ~if_else(is.na(.) | .==0,0,.) )
 
+dades<-dades %>% mutate_at(vars(ends_with(".visita")), 
+                           ~ifelse(is.na(.) | .==0,0,.) )
+
+# descrTable(dades,method=2,Q1=0,Q3=1)
 
 ```
 
 
 
 ```{r calculs2_dades, include=FALSE}
-# Incloure dins de DM2 (DG.E11) Altres DM (DG.DM_O)
-dades<-dades %>% mutate(DG.E11=ifelse(DG.DM_O==1,1,DG.E11))
+
+# # Eliminar aquest criteri donat que ja s'ha fet via agrupador
+# 
+# # Incloure dins de DM2 (DG.DM2) Altres DM (DG.DM_O)
+# dades<-dades %>% mutate(DG.DM2=ifelse(DG.DM_O==1,1,DG.DM2))
 
 # Recodes
 dades<-dades %>% 
@@ -345,7 +731,10 @@ dades %>% filter(sexe=="D") %>% group_by(edat_grup2) %>% summarize(n(),min(edat)
 ```
 
 
+
 ```{r calculs3_dades, include=FALSE}
+
+
 # Recodes
 dades<-dades %>% 
   mutate(any_index=factor(lubridate::year(ymd(dtindex))))
@@ -358,7 +747,7 @@ dades<-dades %>%
 
 dades_regicor<-selectorvariables("vars_regicor",taulavariables=conductor_variables,dt=dades) %>% 
   mutate(age=edat,
-         diabetes=if_else(DG.E11==1,1,0),
+         diabetes=if_else(DG.DM2==1,1,0),
          smoker=if_else(tab.valor==1,1,0,missing = 0), 
          coltot=COLTOT.valor,
          colhdl=COLHDL.valor,
@@ -374,7 +763,81 @@ dades<-dades %>% bind_cols(regicor_df)
 
 rm(temp,dades_regicor,regicor_df)
 
+
 ```
+
+
+```{r score2, include=FALSE}
+
+dt_temp<-dades
+
+
+link_source<-paste0("https://github.com/jrealgatius/Stat_codis/blob/master/Scores.R","?raw=T")
+devtools::source_url(link_source)
+
+
+dt_temp<-dt_temp %>% mutate(
+  score2=
+    score2(sex=sexe,age=edat,smoke =tab.valor,sbp=PAS.valor,
+           dm=as.numeric(DG.DM2==1 | DG.DM1==1),
+           coltot=COLTOT.valor,colhdl=COLHDL.valor,risk_region = "Low")) 
+
+# Grups de risc
+dt_temp<-
+  dt_temp %>% mutate(score2_grup=case_when(edat<50 & score2<2.5 ~ 1,
+                               edat<50 & score2>=2.5 & score2<7.5 ~ 2,
+                               edat<50 & score2>=7.5 ~ 3,
+                               
+                               edat>=50 & edat<70 & score2<5 ~ 1,
+                               edat>=50 & edat<70 & score2>=5 & score2<10 ~ 2,
+                               edat>=50 & edat<70 & score2>=10 & score2<100 ~3,
+                               
+                               edat>=70 & score2<7.5 ~ 1,
+                               edat>=70 & score2>=7.5 & score2<15 ~ 2,
+                               edat>=70 & score2>=15~ 3))
+
+##
+
+#
+
+# # Validacio score2 / score2 Truncat
+# dt_temp<- dades %>% filter(DG.DM2==0 & DG.DM1==0) %>%
+#   transmute(score2=score2(sex=sexe,age=edat,smoke =tab.valor,sbp=PAS.valor,dm=as.numeric(DG.DM2==1 | DG.DM1==1),
+#              coltot=COLTOT.valor,colhdl=COLHDL.valor,risk_region = "Low"),
+#             score2.0=score2.taules(sex=sexe,age=edat,smoke=tab.valor,sbp=PAS.valor,coltot=COLTOT.valor,colhdl=COLHDL.valor)) %>%
+#   na.omit()
+# cor.test(dt_temp$score2,dt_temp$score2.0)
+# t.test(dt_temp$score2,dt_temp$score2.0,paired = T)
+# plot(dt_temp$score2,dt_temp$score2.0)
+# table1::table1(~score2+ score2.0,data=dt_temp)
+
+score2.taules(sex="D",age=76,smoke="N",sbp=120,coltot=180,colhdl=32)
+score2(sex="D",age=76,smoke="N",sbp=120,dm="N",coltot=130,colhdl=32,risk_region="Low")
+score2(sex="D",age=76,smoke="Y",sbp=140,dm="N",coltot=224,colhdl=30,risk_region="Low")
+score2(sex="H",age=50,smoke="Y",sbp=140,dm="N",coltot=243.18,colhdl=54.04,risk_region="Moderate")
+
+# coltot=c(212.7) # 243.2 - 6.3  / 212.7 - 5.5
+# colhdl=c(50.2)   #54.0 - 1.4 / 50.2 - 1.3
+# coltot=# 243.2 - 6.3  / 212.7 - 5.5
+# 6.3*38.6
+# 1.4*38.6
+
+# # Comparativa amb score2
+# cor.test(dades$score2,dades$regicor)
+# cor.test(dt_temp$score2,dt_temp$score2.0)
+# plot(dt_temp$score2,dt_temp$score2.0)
+
+#
+table1::table1(~score2+ regicor,data=dt_temp)
+
+# plot(dades$regicor,dades$score2)
+# cor(dades$regicor,dades$score2)
+# cor.test(dades$regicor,dades$score2)
+dades<-dt_temp
+
+```
+
+
 
 ```{r calculs4_dades, include=FALSE}
 # Variables Noves Emilio Ortega --------------
@@ -396,10 +859,18 @@ dades<-dades %>%
     TG.valor<=150 & hdlbajo_cat2=="No"~ "No")) 
                  
 # Colesterol remanente: col_rema
-dades<-dades %>% mutate(col_rema=COLTOT.valor-COLLDL.valor-COLHDL.valor) 
+# dades<-dades %>% mutate(col_rema=COLTOT.valor-COLLDL.valor-COLHDL.valor) 
+
+# Remanente només es calcularà quan  LDL I HDL I COLTOTAL siguin del mateix dia: COLLDL.dies, COLHDL.dies, COLLDL.dies.
+# Colesterol remanente, valors negatiusi 0s -->  missings
+
+dades<-dades %>% mutate(col_rema = case_when((COLHDL.dies==COLTOT.dies)  & (COLLDL.dies==COLTOT.dies) & (COLHDL.dies==COLLDL.dies) 
+                                         ~ COLTOT.valor - COLLDL.valor-COLHDL.valor),
+                        col_rema=replace(col_rema,col_rema<=0,NA)   # Negatius i 0's --> missings
+                        ) 
 
 # Colesterol noHDL: col_noHDL 
-dades<-dades %>% mutate(col_noHDL=COLTOT.valor--COLHDL.valor) 
+dades<-dades %>% mutate(col_noHDL=COLTOT.valor-COLHDL.valor) 
 
 # regicor_cat2 (DM1 no te regicor)
 dades<-dades %>% mutate(regicor_cat2=case_when(
@@ -414,7 +885,6 @@ dades<-dades %>% mutate(regicor_cat=case_when(
   regicor>=5 & regicor<10~2,
   regicor>=10 ~3)) 
 
-
 # regicor_mis 
 dades<-dades %>% mutate(regicor_mis=if_else(is.na(regicor),"Missing","Value") %>% as.factor())
 
@@ -427,7 +897,9 @@ dades<-dades %>% bind_cols(temp_dt) %>% as_tibble()
 ```
 
 
+
 ```{r calculs5_dades, include=FALSE}
+
 
 
 # FHF_cat (fenotipo hipercolesterolemia familiar) -----
@@ -478,15 +950,35 @@ dades<-dades %>% mutate(DG.DSL=if_else(FD.HIPOLIP | FP.HIPOLIP | TG.valor>150 | 
 ```
 
 
-```{r calculs6_dades, include=FALSE}
+```{r canviunitatscolesterol, include=FALSE}
+
+# Canvi d'unitats de HDL 
+
+dades<- dades %>% 
+  mutate_at(c("COLTOT.valor","COLHDL.valor","COLLDL.valor","col_noHDL"),.funs = list(x10 = ~ (./10))) %>% 
+  mutate (col_rema_x5=col_rema/5)
+
+
+
+```
+
+
+
+```{r calculs6_dades, include=FALSE, warning=FALSE}
+
+
 # Recodes automatics
 dades<-recodificar(dades,taulavariables = conductor_variables,criteris = "recodes")
 dades<-recodificar(dades,taulavariables = conductor_variables,criteris = "recodes2")
 dades<-recodificar(dades,taulavariables = conductor_variables,criteris = "recodes3",prefix = "g")
 dades<-recodificar(dades,taulavariables = conductor_variables,criteris = "recodes4",prefix = "f")
 
+
+dades<-dades %>% mutate(TOT.visita=INF.visita+MG.visita+MURG.visita,INF.visita,MG.visita,MURG.visita)
+
+
 # Visites previes: 1.Si/0.No
-dades<-dades %>% mutate(visites_cat=ifelse(visites_TOT>=1,1,0))
+dades<-dades %>% mutate(visites_cat=ifelse(TOT.visita>=1,1,0))
 
 
 # # Generar filtre posterior (Grups , Event i seus controls: només si es MACE (s'exclou: nomes Insuficiecia cardiaca / Artper) 
@@ -495,61 +987,135 @@ dades<-dades %>% mutate(visites_cat=ifelse(visites_TOT>=1,1,0))
 
 ```
 
+```{r, refcats,include=FALSE, warning=FALSE}
 
-# Flow-chart y criteros de inclusión
 
-## Criteris d'exclusió / inclusió :
-
-> 1. Any de naixament =<1981 and >=1935
-> 2. Actius a SIDIAP 2010 
-> 3. Events CV incidents entre 2010-2016 registrats segons CIM10/9 (E-CAP / HOSPITAL)
-
-> Exclosos antecedent CV a 2010
-> Exclosa població amb DM1 o fibrilació auricular (a 2010)
-
-### Dubtes: 
-
-> Excloure per rang d'edat en data de registre (35-75 anys)?
-> Excloure casos amb FA 2010?
-> Excloure casos d'insuficiencia Cardiaca / Artper?
+dades<-dades %>% refcat(conductor = conductor_variables,ref = "refcat")
 
 
 
-```{r exclusions, message=FALSE, warning=FALSE}
+```
 
+
+```{r filtrar_subgrups}
+
+
+# Filtrar si hi ha analisis de subgrups
+if (params$subgrup=="DM2") dades<-dades %>% filter(DG.DM2==1)
+if (params$subgrup=="DM1") dades<-dades %>% filter(DG.DM1==1)
+
+
+
+```
+
+
+
+# 2. Métode
+
+## Disseny
+
+Cohort retrospectiva amb població inclosa a Gener del 2010 amb seguiment fins Desembre del 2016
+
+## Definició d'esdeveniment Cardiovascular  
+
+Identificació d'esdeveniment Cardiovascular segons diagnostics registrats (Codis CIM10 o CIM9) a  SIDIAP, provinents de la historia clínica informatitzada atenció primria (E-Cap), o altes hospitalaries (CMBDH) .
+
+Els codis considerats com a esdeveniments Cardiovascular son els següents: 
+
+
+```{r}
+
+
+readxl::read_excel(here::here("cataleg_precav_emilio.xls")) %>% 
+  filter(!is.na(EV_TER)) %>% 
+  select(cod,tipo,DES, EV_TER,AGR2) %>% distinct() %>% 
+  kable(caption = "Llistat de codis CIM10/CIM9 considerats com esdeveniments cardiovasculars") %>% kableExtra::kable_classic_2()
+
+
+```
+
+
+
+# Criteris d'inclusió i exclusió 
+
+**Inclusions:**
+
+- 1. Nascuts abans del 1982 (<=1982)
+- 2. Actius a SIDIAP 2010 amb antiguitats superior a 3 anys
+
+**Esclusions:** 
+
+- Antecedent CV a 2010
+- Fibrilació auricular (a 2010)
+- Fora del rang d'edat (30-89)
+
+## Flow-chart
+
+```{r exclusions, message=FALSE, warning=FALSE, eval=TRUE}
 # Antecedents 2010
 # NA --> 0 (Else=1) (No hi ha 0)
-PACIENTS<-PACIENTS %>% mutate_at(vars(starts_with("ANT.")), 
-                           ~if_else(is.na(.) | .==0,0,1))
 
-# Genero taula de 20k idps exitus (Filtro per només per dos criteris d'exclusió pq quadri més amb els 20.000)
-dt_temp<-dades %>% filter(situacio=="D") %>% filter(ANT.DM1==0,ANT.FA==0) %>% select(idp,situacio,sortida)
-saveRDS(dt_temp,"ids_INE_ECVCAT.Rds")
+# # Genero taula de 20k idps exitus (Filtro per només per dos criteris d'exclusió pq quadri més amb els 20.000)
+# dt_temp<-dades %>% filter(situacio=="D") %>% filter(ANT.DM1==0,ANT.FA==0) %>% select(idp)
+# saveRDS(dt_temp,"ids_INE_ECVCAT.Rds")
 
-formu<-formula_compare("vars_exc","",taulavariables = conductor_variables)
 
-descrTable(formu,PACIENTS,method = 3) %>% 
+dt_temp<-dades
+
+
+
+formu<-formula.text(x="exclusio2",y="",taulavariables = conductor_variables,sheet="criteris_exclusio")
+
+descrTable(formu,dt_temp,method = 3,Q1=0,Q3=1) %>% 
   export2md(caption = paste0("Frequencia d'exclusions"), format = "html")
 
 
-criteris_exclusio_diagrama(dt=PACIENTS,
+source("Flow_chart_ggconsort.R")
+
+
+#
+Generar_flow_chart_consort(dt=dt_temp,
                            taulavariables=conductor_variables,
-                           criteris = "exc",etiquetes = "extra",ordre = "ordre")
+                           sheet="criteris_exclusio",
+                           criteris="exc_ggconsort",missings=F,
+                           labels="descripcio",
+                           sequencial=F,
+                           lab_start = "Population",
+                           lab_random = "Analyzed sample") 
+
+
+# # 
+# # Flow chart
+# criteris_exclusio_diagrama(dt=dt_temp,
+#                            taulavariables=conductor_variables,
+#                            sheet="criteris_exclusio",
+#                            criteris = "exclusio",
+#                            etiquetes = "descripcio",
+#                            ordre = "ordre")
 
 # Aplico criteris d'exclusió tant a POBLACIÓ com esdeveniments 
+dt_temp<-dt_temp %>% criteris_exclusio(taulavariables=conductor_variables,
+                                   sheet="criteris_exclusio",
+                                   criteris = "exclusio")
 
-PACIENTS<-PACIENTS %>% criteris_exclusio(taulavariables=conductor_variables,criteris = "exc")
-dades<-dades %>% criteris_exclusio(taulavariables=conductor_variables,criteris = "exc")
+
+
+descrTable(~edat,dt_temp,method = 2,Q1=0,Q3=1) %>% 
+  export2md(caption = paste0("Frequencia d'exclusions"),extra.labels=c("","",""), format = "html")
+
+
+dades<-dt_temp
+
+
 
 ```
+
 
 
 ```{r etiquetacio_dades, include=FALSE, message=FALSE}
 
 # Etiquetació / factorització / relevels
-
 # Factoritzar NO.Yes llista de variables "factor" situades a la taulavariables camp=factor
-
 dades<-factoritzar.NO.YES(dt=dades,columna="factor.YESNO",taulavariables=conductor_variables)
 
 # Factoritzar variables character (excepte c("idp","idup", "codindex"))
@@ -563,7 +1129,6 @@ dades<-dades %>% mutate(CKDEPI.valor.cat4=factor(CKDEPI.valor.cat4,levels = rev(
 dades<-dades %>% mutate(qmedea=factor(qmedea,levels = rev(levels(qmedea))))
 
 
-
 ```
 
 
@@ -574,7 +1139,8 @@ dades<-dades %>% mutate(qmedea=factor(qmedea,levels = rev(levels(qmedea))))
 # PACIENTS<-PACIENTS %>% left_join(dt_temp,by="idp")
 
 # any evento
-dades<-dades %>% mutate(anyevent=lubridate::year(ymd(dtevent)), event=if_else(anyevent>0,"Yes","No",missing = "No"))
+dades<-dades %>% mutate(anyevent=lubridate::year(ymd(dtevent)), 
+                        event=if_else(anyevent>0,"Yes","No",missing = "No"))
 
 ## Data fi de seguiment / Lliure d'esdeveniment (Data d'event / exitus / 20161231): 
 dades<- dades %>% mutate(datafi=dtevent,
@@ -626,115 +1192,117 @@ dades<-dades %>% mutate(exitus=if_else(situacio=="D","Yes","No"))
 ```
 
 
+
+
 ```{r preparacio_PACIENTS3, include=FALSE, message=FALSE}
 
+
+
 # Value labels
-dades<-dades %>% etiquetar_valors(variables_factors = conductor_variables,fulla="value_label",camp_etiqueta="etiqueta")
+dades<-
+  dades %>% etiquetar_valors(variables_factors = conductor_variables,fulla="value_label",camp_etiqueta="etiqueta") 
 
 # Etiquetar 
-dades<-etiquetar(d=dades,taulavariables = conductor_variables)
+dades<-etiquetar(d=dades,taulavariables = conductor_variables) 
 
-```
-
-
-
-```{r filtres}
-
-PACIENTS<- dades 
-dades<-dades %>% filter(event=="Yes")
 
 
 ```
 
 
-```{r, include=FALSE}
+```{r copia_dades}
 
-temp_dt<-dades %>% select(idp,extreure.variables("events",conductor_variables), cod_terr,cod_tipo)
+dades_pob<-dades
 
-formu<-formula.text("tabla_territorio",y="cod_terr",taulavariables = conductor_variables)
-descrTable(formu,temp_dt,max.ylev=20,max.xlev=20, show.p.overall = F,hide="No")
-
-formu<-formula.text("event_tipo",y="cod_tipo",taulavariables = conductor_variables)
-descrTable(formu,temp_dt,max.ylev=20,max.xlev=20, show.p.overall = F,hide="No")
+dades<-dades_pob %>% filter(event=="Yes")
 
 
 ```
 
-
-
-```{r validacio, include=FALSE}
-
-## Validación de grupos de edad
-
-dades %>% filter(sexe=="H") %>% group_by(edat_grup2) %>% summarise(min(edat),max(edat),mean(edat), N=n()) %>% 
-  kable(caption = "Descriptivo validación edad en HOMBRES") %>% kableExtra::kable_styling()
-
-dades %>% filter(sexe=="D") %>% group_by(edat_grup2) %>% summarise(min(edat),max(edat), N=n()) %>% 
-  kable(caption = "Descriptivo validación edad en MUJERES") %>% kableExtra::kable_styling()
-
-
-```
 
 # Resultados 
 
-## Descriptiva exploratoria de eventos 
+
+# 3. Cohorte 2010 (N= `r as.character(as.numeric(count(dades_pob)))`)
+
+
+
+
+## 3.1. Caracterización de toda la población
+
+- Se presenta un descriptivo en fecha de inicio (2010) de toda la Cohorte  por grupos de edad
+
+### Definición de grupos de edad
 
 ```{r}
+dt_temp<-dades_pob
+
+N=count(dades) %>% as.numeric()
+
+dt_temp2<-
+  dt_temp %>% group_by(edat_grup2) %>% 
+  summarise(n=n(),
+            freq=round((100*(n/N)),2)) %>% ungroup()
+  
+labels_edat<-read_conductor(conductor_variables,sheet="value_label") %>% 
+  filter(camp=="edat_grup2") %>% select(edat_grup2=etiqueta,label=descripcio) 
 
 
-formu<-formula_table1("baseline","edat_grup2",taulavariables = conductor_variables,dt=dades)
+dt_temp2 %>% mutate(edat_grup2=as.character(edat_grup2)) %>% 
+  left_join(labels_edat) %>% 
+  select(grup=edat_grup2,label,n,'%'=freq) %>% 
+  kable(caption = "Distribució de grups d'edat i sexe i descripció") %>% kableExtra::kable_styling()
 
-table1::table1(formu ,data=dades, caption="Tabla 0: Características clínicas por grupo de edad",
-               render.continuous=c(.="Mean (SD)", 
+```
+
+### Descriptivo por grupos de edat 
+
+```{r}
+dt_temp<-dades_pob
+
+
+
+# c("Duracion_DM1.cat5","Duracion_DM2.cat5") elimats ja que son 100% missigs en alguns subgrups
+
+formu<-formula_table1("baseline","edat_grup2",
+                      taulavariables = conductor_variables,dt=dades,eliminar = c("Duracion_DM1.cat5","Duracion_DM2.cat5"))
+
+table1::table1(formu ,data=dt_temp, caption="Tabla 0: Características clínicas por grupo de edad",
+               render.continuous=c(.="Mean (SD)",
                                    .="Median [Min, Max]",
                                    .="[Q1-Q3]"))
 
 
-```
-
-
-# 1.1 Caracterización de toda la población 
-
-- Se presenta un descriptivo en fecha de inicio (2010) de toda la Cohorte 
-
-```{r}
-
-formu<-formula_compare("taula1","edat_grup2",taulavariables = conductor_variables)
-descrTable(formu,PACIENTS,show.p.overall = F,show.all = T,hide= "No",show.n = T, show.p.trend = T) %>% 
-  export2md(caption = paste0("Tabla 1: Características clínicas y demográficas por grupos de edad"))
-
 
 ```
 
 
-# 1.2 Caracterización de eventos
+```{r, eval=FALSE}
+
+# Prova amb tbl_summary
 
 
-- Descriptivo en 2010 los eventos CV 
-
-## Tabla 1 
-
-```{r}
-
-formu<-formula_compare("taula1","edat_grup2",taulavariables = conductor_variables)
-
-descrTable(formu,dades,show.p.overall = F,show.all = T,hide= "No",show.n = T, show.p.trend = T) %>% 
-  export2md(caption = paste0("Tabla 1: Características clínicas y demográficas por grupos de edad"))
+library(gtsummary)
 
 
-descrTable(formu,dades,subset = sexe=="H",show.p.overall = F,show.all = T,hide= "No",show.n = T, show.p.trend = T) %>% 
-  export2md(caption = paste0("Tabla 1.1: Características clínicas y demográficas por grupos de edad en Hombres"))
+start_time <- Sys.time()
+dades %>% select(extreure.variables("baseline",conductor_variables),edat_grup2) %>% 
+  gtsummary::tbl_summary(type = all_continuous() ~ "continuous2",
+                       statistic = all_continuous() ~ c("{mean}, ({sd})","{median} ({p25}, {p75})", "{min}, {max}"),
+                       by="edat_grup2")
 
-descrTable(formu,dades,subset = sexe=="D",show.p.overall = F,show.all = T,hide= "No",show.n = T, show.p.trend = T) %>% 
-  export2md(caption = paste0("Tabla 1.2: Características clínicas y demográficas por grupos de edad en Mujeres"))
+end_time <- Sys.time()
+end_time - start_time
 
-formu<-formula.text("taula1","sexe",taulavariables = conductor_variables,
-                    eliminar = c("sexe","edat.cat5","CKDEPI.valor.catg3","CKDEPI.valor","CAC.valor","CAC.valor.cat3")) # No hi ha casos depenen del grup d'edat
-taula_sexe<-descrTable(formu,dades,show.p.overall = T,show.all = F,show.n = F) 
-taula_sexe %>% export2md(caption = paste0("Tabla 1.3: Características clínicas y demográficas por sexo"))
 
-strataTable(taula_sexe, "edat_grup2") %>%  
-  export2md(caption = "Tabla 1.4: Características clínicas y demográficas por sexo estratificadas por grupos de edad")
+start_time <- Sys.time()
+table1::table1(formu ,data=dt_temp, caption="Tabla 0: Características clínicas por grupo de edad",
+               render.continuous=c(.="Mean (SD)",
+                                   .="Median [Min, Max]",
+                                   .="[Q1-Q3]"))
+end_time <- Sys.time()
+end_time - start_time
+
 
 
 ```
@@ -743,69 +1311,90 @@ strataTable(taula_sexe, "edat_grup2") %>%
 
 
 
-## Distribución de eventos por tipo y territorio (evento único) global y por grupo de edad y sexo
 
 
-```{r}
-temp_taula<-descrTable(edat_grup2~cod_terr,dades,show.p.overall = T,show.all = T,hide= "No")  
-temp_taula %>% export2md(caption = paste0("Tabla 2.1 Distribución del territorio del evento por grupos de edad"))
+## 3.2. Incidencia acumulada de eventos CV
 
-strataTable(temp_taula,"sexe") %>% export2md(caption = paste0("Tabla 2.1.2 Distribución del tipo de evento por territorio estratificado por grupos de edad y sexo"))
-
-
-temp_taula<-descrTable(edat_grup2~cod_tipo,data=dades,show.p.overall = F,show.all = T,max.ylev = 25,max.xlev = 25)
-temp_taula %>% export2md(caption = paste0("Tabla 2.2. Distribución del tipo del evento por grupos de edad"))
-
-strataTable(temp_taula,"sexe") %>% export2md(caption = paste0("Tabla 2.2.2 Distribución del tipo del evento por grupos de edad y sexo"))
-
-
-
-```
-
-
-
-# 2. Incidencia de eventos CV
-
-## Incidencia acumulada global i por edad i sexo
+### Global
 
 ```{r descriptiva_poblacio}
 # dESCRIPTIVA
 
-temp_taula<-descrTable(sexe~event+anyevent,PACIENTS,show.p.overall = F,show.all = T,hide= "No",method = 3,include.miss=T) 
-temp_taula %>% export2md(caption = paste0("Tabla 3: Incidencia acumulada de eventos global y por año"))
+dt_temp<-dades_pob
 
-temp_taula<-descrTable(edat_grup2~event+anyevent,PACIENTS,show.p.overall = F,show.all = T,hide= "No",method = 3,include.miss=T) 
-temp_taula %>% export2md(caption = paste0("Tabla 4: Incidencia acumulada de eventos global y por año"))
-
-strataTable(temp_taula,"sexe") %>% 
-  export2md(caption = paste0("Tabla 4.2: Incidencia acumulada de eventos global y por año estratificado por sexo"))
+# Converirt a factor any event
+dt_temp$anyevent <- as.factor(dt_temp$anyevent)
 
 
-## Por Territorio 
-temp_taula<-descrTable(edat_grup2~cod_terr ,PACIENTS,show.p.overall = F,show.all = T,hide= "No")  
-temp_taula %>% export2md(caption = paste0("Tabla 5: Incidencia acumulada por territorio ECV y por grupo de edad"))
+temp_taula<-descrTable(sexe~event+anyevent,dt_temp,show.p.overall = F,show.all = T,hide= "No",method = 3,include.miss=T) 
+temp_taula %>% export2md(caption = paste0("Tabla 2: Incidencia acumulada de eventos global por sexo por año"))
 
-# Strat sexe
-strataTable(temp_taula,"sexe") %>% export2md(caption = paste0("Tabla 5.2: Incidencia acumulada por territorio ECV y por grupo de edad estratificado por sexo"))
+temp_taula<-descrTable(edat_grup2~event+anyevent,dt_temp,show.p.overall = F,show.all = T,hide= "No",method = 3,include.miss=T) 
+temp_taula %>% export2md(caption = paste0("Tabla 3: Incidencia acumulada de eventos global por grupo de edad y por año"))
 
 
-## Por SUBTIPO 
-temp_taula<-descrTable(edat_grup2 ~cod_tipo,PACIENTS,show.p.overall = F,show.all = T,hide= "No",max.ylev=20,max.xlev=20)
-temp_taula %>% export2md(caption = paste0("Tabla 6: Incidencia acumulada de evento por subtipo y por edad"))
 
 strataTable(temp_taula,"sexe") %>% 
-  export2md(caption = paste0("Tabla 6.2: Incidencia acumulada de evento por subtipo y por edad estratificado por sexo"))
-
+  export2md(caption = paste0("Tabla 4: Incidencia acumulada de eventos global y por año estratificado por grupos de edad y sexo"))
 
 
 
 ```
 
-## Descriptiva de la incidencia de eventos CV
 
-### Incidencia global, per grups d'edat y sexe
+
+
+### Por subtipos
+
+Nota: Las incidencias por  territorio y tipo són condicionadas a que sea el primer evento. Por lo tanto no se pueden interpretar como una incidencia real del subtipo que se analiza. 
+
+
+```{r descriptiva_poblacio_territorios}
+
+## Por Territorio 
+temp_taula<-descrTable(edat_grup2~cod_terr ,dt_temp,show.p.overall = F,show.all = T,hide= "No")  
+temp_taula %>% export2md(caption = paste0("Tabla 5: Incidencia (Condicional) acumulada por territorio ECV y por grupo de edad"))
+
+# Strat sexe
+strataTable(temp_taula,"sexe") %>% export2md(caption = paste0("Tabla 6: Incidencia acumulada por territorio ECV y estratificado por grupos de edad y sexo"))
+
+
+## Por SUBTIPO 
+temp_taula<-descrTable(edat_grup2 ~cod_tipo,dt_temp,show.p.overall = F,show.all = T,hide= "No",max.ylev=20,max.xlev=20)
+temp_taula %>% export2md(caption = paste0("Tabla 6: Incidencia acumulada de evento por subtipo y por edad"))
+
+
+## Homes 
+temp_taula<-
+  descrTable(edat_grup2 ~cod_tipo,dt_temp %>% filter(sexe=="H"),show.p.overall = F,show.all = T,hide= "No",max.ylev=20,max.xlev=20)
+temp_taula %>% export2md(caption = paste0("Tabla 7: Incidencia acumulada de evento por subtipo y por edad. Hombres"))
+
+## Dones 
+temp_taula<-
+  descrTable(edat_grup2 ~cod_tipo,dt_temp %>% filter(sexe=="D"),show.p.overall = F,show.all = T,hide= "No",max.ylev=20,max.xlev=20)
+temp_taula %>% export2md(caption = paste0("Tabla 8: Incidencia acumulada de evento por subtipo y por edad. Mujeres"))
+
+
+
+# strataTable(temp_taula,"sexe") %>% 
+#   export2md(caption = paste0("Tabla 6.2: Incidencia acumulada de evento por subtipo y por edad estratificado por sexo"))
+
+
+
+```
+
+## 3.3. Tasas de incidencia eventos CV
+
+### Incidencia 
+
+Estimación de las tasas de incidencia (Densidad de incidencia) globalmente y por subgrupos de edad y sexo
+
+
 
 ```{r}
+
+dt_temp<-dades_pob
+
 resum_events_emilio<-function(dt=PACIENTS,evento="event",temps="anys_seguiment",valorevent="Yes") {
 
     temps<-rlang::sym(temps)
@@ -817,35 +1406,174 @@ resum_events_emilio<-function(dt=PACIENTS,evento="event",temps="anys_seguiment",
                      `Follow-up(Years) Median`=median(!!temps) %>% as.numeric(),
                      `Incidence rate (%-year)`=((NEvents/`Person-time(year)`)*100),
                      `Cumulative incidence(%)`=(NEvents/N)*100 ) }
+# Resum per grups
+resum_events_emilio_grups<-function(vars="sexe") {
+  
+  # dt_temp
+  # vars="Duracion_DM1.cat5" 
 
-resum_events_emilio(PACIENTS,evento="event",temps="anys_seguiment",valorevent="Yes") %>% 
-  kable(digits = 3,caption = "Descriptiva de eventos CV") %>% kableExtra::kable_styling()
+  dades_split<-taula<-split(dt_temp,dt_temp[[vars]])
+  
+  if (length(dades_split)) {
+      taula<- dades_split %>% 
+            purrr::map_df(~resum_events_emilio(.x,evento="event",temps="anys_seguiment",valorevent="Yes"),.id="Grup") %>% 
+            select(-c("Follow-up(Years) Median","Cumulative incidence(%)"))
+      taula<-tibble::tibble (Var=vars) %>% bind_cols(taula)
+    } else taula %>% tibble(NA)
+  
+  taula
+  
+  }
+
+resum_events_emilio(dt_temp,evento="event",temps="anys_seguiment",valorevent="Yes") %>% 
+  kable(digits = 3,caption = "Descriptiva de eventos CV") %>% kableExtra::kable_classic_2()
 
 # El mateix per grup d'edat i sexe
-PACIENTS %>% split(.$sexe) %>% 
+dt_temp %>% split(.$sexe) %>% 
   map_df(~resum_events_emilio(.x,evento="event",temps="anys_seguiment",valorevent="Yes"),.id="Sex") %>% 
-  kable(digits = 3,caption = "Descriptiva de eventos CV por sexo") %>% kableExtra::kable_styling()
+  kable(digits = 3,caption = "Descriptiva de eventos CV por sexo") %>% kableExtra::kable_classic_2()
 
 # El mateix per grup d'edat i sexe
 
-PACIENTS %>% split(.$edat_grup2) %>% 
+dt_temp %>% split(.$edat_grup2) %>% 
   map_df(~resum_events_emilio(.x,evento="event",temps="anys_seguiment",valorevent="Yes"),.id="Grupo edad") %>% 
-  kable(digits = 3,caption = "Descriptiva de eventos CV por grupos de edad") %>% kableExtra::kable_styling()
+  kable(digits = 3,caption = "Descriptiva de eventos CV por grupos de edad") %>% kableExtra::kable_classic_2()
 
 
 # El mateix per grup d'edat i sexe
-PACIENTS %>% mutate (sex_age=paste0(sexe,":",edat_grup2)) %>% split(.$sex_age) %>% 
+dt_temp %>% mutate (sex_age=paste0(sexe,": ",as.numeric(edat_grup2),".", edat_grup2)) %>% split(.$sex_age) %>% 
   map_df(~resum_events_emilio(.x,evento="event",temps="anys_seguiment",valorevent="Yes"),.id="Grupo edad") %>% 
-  kable(digits = 3,caption = "Descriptiva de eventos CV por sexo y edad") %>% kableExtra::kable_styling()
+  kable(digits = 3,caption = "Descriptiva de eventos CV por sexo y edad") %>% kableExtra::kable_classic_2()
 
 
 
 ```
 
-### Figuras de incidencia por sexo estratificado por grupo de edad
+## 3.4. Tasas de incidencia de eventos CV por subgrupos 
+
+Estimación de las tasas de incidencia (Densidad de incidencia) globalmente y por subgrupos de edad y sexo
+
+```{r}
+
+# Selecciono vars factor
+vars_table<-extreure.variables("taula1",taulavariables = conductor_variables)
+vars_table<-dades_pob %>% select(vars_table) %>% select_if(is.factor) %>% names()
+
+# Resum per grups
+vars_table %>% map_df(~resum_events_emilio_grups(.x)) %>% 
+  kable(digits = 3,caption = "Descriptiva de eventos CV por grupos") %>% kableExtra::kable_classic_2()
+
+#
+
+
+```
+
+
+## 3.5. Hazard Ratios de evento CV por factores analizados
+
+Estimación de Hazard ratios de evento CV por cada factor analizado
+
+```{r}
+
+# Calcul de temps to event
+dades_pob$tempstoevent<-with(dades_pob, Surv(anys_seguiment, event == "Yes"))
+
+# 
+
+
+# descrTable(tempstoevent~sexe,data=dades_pob,show.ratio = T,show.p.ratio = F, show.p.overall = F)
+
+
+# Fer HR sobre
+formu<-formula.text("taula1", y="tempstoevent",taulavariables = conductor_variables)
+descrTable(formu,data=dades_pob,show.ratio = T,show.p.ratio = F,show.p.overall = F) %>% export2md(format = "markdown",strip=T)
+  
+
+
+
+
+
+```
+
+## 3.5.1 Hazard Ratios de evento CV por factores analizados estratificado por sexos
 
 
 ```{r}
+
+# descrTable(tempstoevent~sexe,data=dades_pob,show.ratio = T,show.p.ratio = F, show.p.overall = F)
+
+# Fer HR sobre
+formu<-formula.text("taula1", y="tempstoevent",taulavariables = conductor_variables)
+res<-descrTable(formu,data=dades_pob,show.ratio = T,show.p.ratio = F,show.p.overall = F) 
+  
+strataTable(res, strata = "sexe") %>% export2md(format = "markdown",strip=T)
+
+
+
+```
+
+
+## 3.5.2 Hazard Ratios de evento CV por factores analizados estratificado por subgrupos
+
+
+```{r}
+
+# descrTable(tempstoevent~sexe,data=dades_pob,show.ratio = T,show.p.ratio = F, show.p.overall = F)
+
+# Fer HR sobre
+formu<-formula.text("taula1", y="tempstoevent",taulavariables = conductor_variables)
+res<-descrTable(formu,data=dades_pob,show.ratio = T,show.p.ratio = F,show.p.overall = F) 
+  
+strataTable(res, strata = "edat_grup2") %>% export2md(format = "markdown",strip=T)
+
+
+
+```
+
+## 3.5.3 Hazard Ratios de evento CV por factores analizados estratificado por subgrupos (en Hombres)
+
+
+```{r}
+
+dt_temp<-dades_pob %>% filter(sexe=="H")
+
+# descrTable(tempstoevent~sexe,data=dades_pob,show.ratio = T,show.p.ratio = F, show.p.overall = F)
+
+# Fer HR sobre
+formu<-formula.text("taula1", y="tempstoevent",taulavariables = conductor_variables)
+res<-descrTable(formu,data=dt_temp,show.ratio = T,show.p.ratio = F,show.p.overall = F) 
+  
+strataTable(res, strata = "edat_grup2") %>% export2md(format = "markdown",strip=T)
+
+
+
+```
+
+
+## 3.5.4 Hazard Ratios de evento CV por factores analizados estratificado por subgrupos (en Mujeres)
+
+
+```{r}
+
+dt_temp<-dades_pob %>% filter(sexe=="D")
+
+# Fer HR sobre
+formu<-formula.text("taula1", y="tempstoevent",taulavariables = conductor_variables)
+res<-descrTable(formu,data=dt_temp,show.ratio = T,show.p.ratio = F,show.p.overall = F) 
+  
+strataTable(res, strata = "edat_grup2") %>% export2md(format = "markdown",strip=T)
+
+
+
+```
+
+
+## 3.6. Figuras de incidencia por sexo estratificado por grupo de edad
+
+
+```{r}
+
+dt_temp<-dades_pob
 
 plot_surv<-function(dt = PACIENTS){
   
@@ -870,21 +1598,21 @@ plot_surv<-function(dt = PACIENTS){
                       ggtheme = theme_bw()) }
 
 # plot_surv()
-plots_list<-PACIENTS %>% split(.$edat_grup2) %>% map(~plot_surv(.x),nom=.id)
-plots_list[[6]]<-plot_surv()
+plots_list<-dt_temp %>% split(.$edat_grup2) %>% map(~plot_surv(.x),nom=.id)
+plots_list[[6]]<-plot_surv(dades_pob)
 
 # Print plots
 survminer::arrange_ggsurvplots(plots_list,ncol=2,nrow=3)
 plots_list
 
-# HR Ratios 
-PACIENTS$temps_to_event=with(PACIENTS, Surv(anys_seguiment, event == "Yes"))
-temp_taula<-descrTable(temps_to_event~sexe, data=PACIENTS,show.ratio = T, show.p.overall = F, show.p.ratio = F) 
-temp_taula %>% export2md()
-
-
-strataTable(temp_taula,"edat_grup2") %>% 
-  export2md()
+# # HR Ratios 
+# dt_temp$temps_to_event=with(dt_temp, Surv(anys_seguiment, event == "Yes"))
+# temp_taula<-descrTable(temps_to_event~sexe, data=dt_temp,show.ratio = T, show.p.overall = F, show.p.ratio = F) 
+# temp_taula %>% export2md()
+# 
+# 
+# strataTable(temp_taula,"edat_grup2") %>% 
+#   export2md()
   
 
 
@@ -892,45 +1620,54 @@ strataTable(temp_taula,"edat_grup2") %>%
 ```
 
 
+## 3.7. Tasas de incidencia por territorio y tipo
 
-### Incidencia por territorios y tipo
+Nota !!!: Las incidencias por  territorio y tipo són condicionadas a que sea el primer evento. Por lo tanto no se pueden interpretar como una incidencia real del subtipo que se analiza. 
 
 ```{r}
+
+dt_temp<-dades_pob
+
 # S'ha de recodificar esdeveniments unics els multiterritoris
 
 # Per territori
 vars<-extreure.variables("tabla_territorio",conductor_variables)
 
 vars %>% 
-  map_df(~resum_events_emilio(PACIENTS,evento=.x,temps="anys_seguiment",valorevent="Yes")) %>% 
+  map_df(~resum_events_emilio(dt_temp,evento=.x,temps="anys_seguiment",valorevent="Yes")) %>% 
   filter(evento!="EV.TER_multi") %>% 
   kable(digits = 3,caption = "Descriptiva de eventos CV por territorio") %>% kableExtra::kable_styling()
 
 # Per tipus 
 vars<-extreure.variables("tab_coro",conductor_variables)
 vars %>% 
-  map_df(~resum_events_emilio(PACIENTS,evento=.x,temps="anys_seguiment",valorevent="Yes")) %>% 
+  map_df(~resum_events_emilio(dt_temp,evento=.x,temps="anys_seguiment",valorevent="Yes")) %>% 
   filter(evento!="EV.TIP_multi") %>% 
   kable(digits = 3,caption = "Descriptiva de eventos CV") %>% kableExtra::kable_styling() 
 
 vars<-extreure.variables("tab_AVC",conductor_variables)
 vars %>% 
-  map_df(~resum_events_emilio(PACIENTS,evento=.x,temps="anys_seguiment",valorevent="Yes")) %>% 
+  map_df(~resum_events_emilio(dt_temp,evento=.x,temps="anys_seguiment",valorevent="Yes")) %>% 
   filter(evento!="EV.TIP_multi") %>% 
   kable(digits = 3,caption = "Descriptiva de eventos CV") %>% kableExtra::kable_styling() 
   
 vars<-extreure.variables("tab_peri",conductor_variables)
 vars %>% 
-  map_df(~resum_events_emilio(PACIENTS,evento=.x,temps="anys_seguiment",valorevent="Yes")) %>% 
+  map_df(~resum_events_emilio(dt_temp,evento=.x,temps="anys_seguiment",valorevent="Yes")) %>% 
   filter(evento!="EV.TIP_multi") %>% 
   kable(digits = 3,caption = "Descriptiva de eventos CV") %>% kableExtra::kable_styling()
 
 
 ```
 
-### Figuras de incidencia de cada evento (Territorio) por sexo
+## 3.8. Figuras de incidencia de cada evento (Territorio) por sexo
 
-```{r}
+
+Nota: Las incidencias por  territorio y tipo són condicionadas a que sea el primer evento. Por lo tanto no se pueden interpretar como una incidencia real del subtipo que se analiza.
+
+```{r, message=FALSE}
+
+dt_temp<-dades_pob
 
 plot_surv_terr<-function(dt = PACIENTS, EV="event"){
   
@@ -962,37 +1699,40 @@ plot_surv_terr<-function(dt = PACIENTS, EV="event"){
                              legend.labs=c("Female","Male"),
                              fun="event", conf.int = T, 
                       palette =c("black","black"),
-                      ggtheme = theme_bw()) 
-  
-  }
-
+                      ggtheme = theme_bw()) }
 
 # Selecciono events per territori
 vars<-c("event",extreure.variables("tabla_territorio",conductor_variables))
 vars<-vars[!vars%in%"EV.TER_multi"]
 
 # plot_surv()
-plots_list_terr<-vars %>% map(~plot_surv_terr(PACIENTS,.x),nom=.id)
+plots_list_terr<-vars %>% map(~plot_surv_terr(dt_temp,.x),nom=.id)
 
 # Print plots
 survminer::arrange_ggsurvplots(plots_list_terr,ncol=2,nrow=3)
-plots_list_terr
+
 
 
 ```
 
 
-## Hazard Ratios de eventos CV global y por grupo de edad y figura
+## 3.9. Hazard Ratios de eventos CV en Hombres respecto mujeres, globalmente grups de edad y figura
+
+
+Nota: Las incidencias por  territorio y tipo són condicionadas a que sea el primer evento. Por lo tanto no se pueden interpretar como una HR real del subtipo que se analiza.
+
 
 ```{r}
+dt_temp<-dades_pob
+
 HRs_X_EVENT<-function(e="event"){
   
   HRoverall<-
-  HR.COX("grupHR",event = e,t="anys_seguiment",d=PACIENTS,taulavariables = conductor_variables,codievent = "Yes") %>% as_tibble() %>% 
+  HR.COX("grupHR",event = e,t="anys_seguiment",d=dt_temp,taulavariables = conductor_variables,codievent = "Yes") %>% as_tibble() %>% 
   transmute(grup="Overall",HRadjusted,IC951,IC952)
 
   HRgrups<-
-  PACIENTS %>% split(.$edat_grup2) %>% 
+  dt_temp %>% split(.$edat_grup2) %>% 
   map_df(~HR.COX("grupHR",event = e,t="anys_seguiment",d=.x,taulavariables = conductor_variables,codievent = "Yes") %>% as_tibble() %>% 
   select(HRadjusted,IC951,IC952),.id="grup")
 
@@ -1007,8 +1747,19 @@ vars<-c("event","EV.TER.AVC", "EV.TER.Coronario","EV.TER.INSF_CARD","EV.TER.Peri
 taulaHRs<-vars %>% map_df(~HRs_X_EVENT(.x))
 
 
-taulaHRs %>% kable(caption = "Hazard Ratios de evento CV Hombres (ref=Mujer) + IC95% por grupo de edad", digits = 3) %>% kableExtra::kable_styling()
+taulaHRs %>% etiquetar_taula(taulavariables = conductor_variables,camp = "outcome") %>% 
+  kable(caption = "Hazard Ratios de evento CV Hombres (ref=Mujer) + IC95% por grupo de edad", digits = 3) %>% kableExtra::kable_classic_2()
 
+
+```
+
+
+## 3.10. Forest plot de los hazard Ratios de eventos CV global y por grupo de edad
+
+Nota: Las incidencias por  territorio y tipo són condicionadas a que sea el primer evento. Por lo tanto no se pueden interpretar como una HR real del subtipo que se analiza.
+
+
+```{r forest_plot}
 
 # Etiqueta 
 taulaHRs<-etiquetar_taula(taulaHRs,camp = "outcome",taulavariables = conductor_variables)
@@ -1020,97 +1771,294 @@ forest.plot.HR(dadesmodel=taulaHRs, label="grups",mean="HRadjusted",lower="IC951
 ```
 
 
-# 3. Descriptiva de fallecidos (Con y sin evento CV previo) 
+
+# 4. Analisis de  eventos (N= `r as.numeric(count(dades))`)
+
+## 4.1. Descriptivo de eventos por tipo y territorio
+
 
 ```{r}
 
-# Descriptiu exitus vs no exitus
-taula_exitus<-descrTable(exitus~edat_grup2+edat+sexe,data=PACIENTS, show.p.overall = FALSE)
-taula_exitus %>% export2md(caption = "Distribución por edad y sexo de los fallecidos versus los no fallecidos durante el estudio")
+dt_temp<-dades
 
-strataTable(taula_exitus, "sexe") %>%  export2md(caption = "Distribución por edad y sexo de los fallecidos versus los no fallecidos durante el estudio stratificado por sexo ")
+## Per territori
 
-# Descriptiva de exitus
-dt_temp<-PACIENTS %>% filter(exitus=="Yes")
-taula_exitus<-descrTable(event~edat_grup2+edat+sexe,data=dt_temp, show.p.overall = FALSE,show.all = T)
+formu<-formula.text("tabla_territorio",y="edat_grup2",taulavariables = conductor_variables)
+descrTable(formu,
+           dt_temp,
+           max.ylev=20,max.xlev=20, show.p.overall = F,hide="No",
+           include.miss = T,show.all = T) %>% export2md()
 
-taula_exitus %>% export2md(caption = "Características de los **fallecidos** con i sin Evento Cardiovascular durante seguimiento")
+## Per tipus 
 
-# Strata por 
-strataTable(taula_exitus, "sexe") %>% export2md(caption = "Características de los **fallecidos** con i sin Evento Cardiovascular durante seguimiento estratificado por sexo")
+formu<-formula.text("event_tipo",y="edat_grup2",taulavariables = conductor_variables)
+descrTable(formu,
+           dt_temp,
+           max.ylev=20,max.xlev=20, show.p.overall = F,hide="No",
+           include.miss = T,show.all = T) %>% export2md()
 
 
+```
+
+
+## 4.2. Descriptivo de características exploratoria de eventos en baseline
+
+Nota: Los anàlisis de las características basales se refieren a como eran los eventos el dia del inicio de la Cohorte (01/01/2010). No como son cuando se produce el evento. 
+
+### Distribución por grupos de edad-sexo 
+
+```{r}
+dt_temp<-dades
+
+N=count(dades) %>% as.numeric()
+
+dt_temp2<-
+  dt_temp %>% group_by(edat_grup2) %>% 
+  summarise(n=n(),
+            freq=round((100*(n/N)),2)) %>% ungroup()
+  
+labels_edat<-read_conductor(conductor_variables,sheet="value_label") %>% 
+  filter(camp=="edat_grup2") %>% select(edat_grup2=etiqueta,label=descripcio) 
+
+
+dt_temp2 %>% mutate(edat_grup2=as.character(edat_grup2)) %>% 
+  left_join(labels_edat) %>% 
+  select(grup=edat_grup2,label,n,'%'=freq) %>% 
+  kable(caption = "Distribució de grups d'edat i sexe i descripció") %>% kableExtra::kable_styling()
+
+```
+
+
+```{r}
+
+dt_temp<-dades
+
+formu<-formula_table1("baseline","edat_grup2",taulavariables = conductor_variables,dt=dades)
+
+table1::table1(formu ,data=dt_temp, caption="Tabla 0: Características clínicas por grupo de edad",
+               render.continuous=c(.="Mean (SD)", 
+                                   .="Median [Min, Max]",
+                                   .="[Q1-Q3]"))
+
+```
+
+## 4.3. Características clínicas y demográficas por grupos de edad y sexo
+
+```{r}
+dt_temp<-dades
+
+formu<-formula_compare("taula1","edat_grup2",taulavariables = conductor_variables)
+
+descrTable(formu,dt_temp,show.p.overall = F,show.all = T,hide= "No",show.n = T, show.p.trend = T) %>% 
+  export2md(caption = paste0("Tabla 1: Características clínicas y demográficas por grupos de edad"),format = "markdown",strip=T)
+
+
+descrTable(formu,dt_temp,subset = sexe=="H",show.p.overall = F,show.all = T,hide= "No",show.n = T, show.p.trend = T) %>% 
+  export2md(caption = paste0("Tabla 1.1: Características clínicas y demográficas por grupos de edad en Hombres"),
+            format = "markdown",strip=T)
+
+descrTable(formu,dt_temp,subset = sexe=="D",show.p.overall = F,show.all = T,hide= "No",show.n = T, show.p.trend = T) %>% 
+  export2md(caption = paste0("Tabla 1.2: Características clínicas y demográficas por grupos de edad en Mujeres"),
+            format = "markdown",strip=T)
+
+formu<-formula.text("taula1","sexe",taulavariables = conductor_variables,
+                    eliminar = c("sexe","edat.cat5","CKDEPI.valor.catg3","CKDEPI.valor","CAC.valor","CAC.valor.cat3",
+                                 "ALCOHOL.valor","ALDIA.valor")) # No hi ha casos depenen del grup d'edat
+
+
+taula_sexe<-descrTable(formu,dt_temp,show.p.overall = T,show.all = F,show.n = F) 
+
+taula_sexe %>% export2md(caption = paste0("Tabla 1.3: Características clínicas y demográficas por sexo"),
+                         format = "markdown",strip=T)
+
+
+```
+
+
+```{r}
+
+
+dt_temp<-dades
+
+# estratificat per grups edat i sexe 
+vars_eliminar<-c("IMC.valor.cat3" , "COLLDL.valor.catf3", "TG.valor.catg3", 
+                 "HBA1C.valor.cat3" ,"HBA1C.valor.catg4","Duracion_DM2.cat5",
+                 "Duracion_DM1.cat5","regicor_cat2","score2_grup","regicor_cat",
+                 "disl_cat2","TG.valor.cat3","DG.DSL","ALHAB.valor","ALSET.valor")
+
+formu<-formula.text("taula1","sexe",taulavariables = conductor_variables,
+                    eliminar = c("sexe","edat.cat5","CKDEPI.valor.catg3","CKDEPI.valor","CAC.valor","CAC.valor.cat3",
+                                 "ALCOHOL.valor","ALDIA.valor","HBA1C.valor.catf6",vars_eliminar)) # No hi ha casos depenen del grup d'edat
+
+
+# dt_temp$HBA1C.valor.catf6<-as.factor(dt_temp$HBA1C.valor.catf6)
+
+
+taula_sexe<-descrTable(formu,dt_temp,show.p.overall = T,show.all = F,show.n = F) 
+
+#
+strataTable(taula_sexe, "edat_grup2") %>%  
+  export2md(caption = "Tabla 1.4: Características clínicas y demográficas por sexo estratificadas por grupos de edad",
+            format = "markdown",strip=T)
+
+
+```
+
+
+## 4.4. Distribución de eventos por tipo y territorio (evento único) global y por grupo de edad y sexo
+
+
+```{r}
+
+dt_temp<-dades
+
+temp_taula<-descrTable(edat_grup2~cod_terr,dt_temp,show.p.overall = T,show.all = T,hide= "No")  
+temp_taula %>% export2md(caption = paste0("Tabla 2.1 Distribución del territorio del evento por grupos de edad"))
+
+strataTable(temp_taula,"sexe") %>% export2md(caption = paste0("Tabla 2.1.2 Distribución del tipo de evento por territorio estratificado por grupos de edad y sexo"))
+
+temp_taula<-descrTable(edat_grup2~cod_tipo,data=dt_temp,show.p.overall = F,show.all = T,max.ylev = 25,max.xlev = 25)
+temp_taula %>% export2md(caption = paste0("Tabla 2.2. Distribución del tipo del evento por grupos de edad"))
+
+# By sex
+descrTable(edat_grup2~cod_tipo,data=dt_temp %>% filter(sexe=="H"),show.p.overall = F,show.all = T,max.ylev = 25,max.xlev = 25) %>% 
+  export2md(caption = paste0("Tabla 2.2. Distribución del tipo del evento por grupos de edad. Hombres"))
+
+
+descrTable(edat_grup2~cod_tipo,data=dt_temp %>% filter(sexe=="D"),show.p.overall = F,show.all = T,max.ylev = 25,max.xlev = 25) %>% 
+  export2md(caption = paste0("Tabla 2.2. Distribución del tipo del evento por grupos de edad. Mujeres"))
 
 
 
 ```
 
-# 4. Otras tablas 
 
-## Distribución de eventos por tipo y territorio (único) por sexo
+## 4.5. Distribución de eventos por tipo y territorio (único) por sexo
 
 ```{r}
 # Lo mismo por sexo
 
-temp_taula<-descrTable(cod_terr~cod_tipo,data=dades,show.p.overall = F,show.all = F,max.ylev = 25,max.xlev = 25)  
+dt_temp<-dades
 
+temp_taula<-descrTable(cod_terr~cod_tipo,data=dt_temp,show.p.overall = F,show.all = F,max.ylev = 25,max.xlev = 25)  
 temp_taula %>% export2md(caption = paste0("Tabla 2.3. Distribución del tipo de evento por territorio"))
-strataTable(temp_taula,"sexe") %>% export2md(caption = paste0("Tabla 2.3.1 Distribución del tipo de evento por territorio estratificado por sexo"))
+
+# By sex
+descrTable(cod_terr~cod_tipo,data=dt_temp %>% filter(sexe=="H"),show.p.overall = F,show.all = F,max.ylev = 25,max.xlev = 25)  %>% 
+  export2md(caption = paste0("Tabla 2.3.1 Distribución del tipo de evento por territorio estratificado por sexo: Hombres"))
+  
+descrTable(cod_terr~cod_tipo,data=dt_temp %>% filter(sexe=="D"),show.p.overall = F,show.all = F,max.ylev = 25,max.xlev = 25)  %>% 
+  export2md(caption = paste0("Tabla 2.3.2 Distribución del tipo de evento por territorio estratificado por sexo: Mujeres"))
 
 
-strataTable(temp_taula,"edat_grup") %>% export2md(caption = paste0("Tabla 2.3.2 Distribución del tipo de evento por territorio estratificado por edad"))
+# By grupo de edat
+descrTable(cod_terr~cod_tipo,data=dt_temp %>% filter(edat_grup=="Old:M>=55/F>=65"),show.p.overall = F,show.all = F,max.ylev = 25,max.xlev = 25)  %>%  export2md(caption = paste0("Tabla 2.3.3 Distribución del tipo de evento por territorio estratificado por edad. Old:M>=55/F>=65"))
 
-descrTable(sexe~cod_terr,dades,show.p.overall = F,show.all = T,hide= "No")  %>% 
+
+descrTable(cod_terr~cod_tipo,data=dt_temp %>% filter(edat_grup=="Young:M<55/F<65"),show.p.overall = F,show.all = F,max.ylev = 25,max.xlev = 25)  %>%  export2md(caption = paste0("Tabla 2.3.4 Distribución del tipo de evento por territorio estratificado por edad. Young:M<55/F<65"))
+
+
+
+descrTable(sexe~cod_terr,dt_temp,show.p.overall = F,show.all = T,hide= "No")  %>% 
   export2md(caption = paste0("Tabla 2.4. Distribución del territorio del evento por sexo"))
 
-descrTable(sexe~cod_tipo,data=dades,show.p.overall = F,show.all = T,max.ylev = 25,max.xlev = 25)  %>% 
+descrTable(sexe~cod_tipo,data=dt_temp,show.p.overall = F,show.all = T,max.ylev = 25,max.xlev = 25)  %>% 
   export2md(caption = paste0("Tabla 2.5. Distribución del territorio del evento por grupos de edad"))
 
-temp_taula<-descrTable(cod_terr~cod_tipo,data=dades,show.p.overall = F,show.all = F,max.ylev = 25,max.xlev = 25)  
-strataTable(temp_taula,"sexe") %>% export2md(caption = paste0("Tabla 2.6. Distribución del tipo de evento por territorio estratificado por sexo"))
+temp_taula<-descrTable(cod_terr~cod_tipo,data=dt_temp,show.p.overall = F,show.all = F,max.ylev = 25,max.xlev = 25)  
+
+# Por sexo
+
+descrTable(cod_terr~cod_tipo,data=dt_temp %>% filter(sexe=="H"),show.p.overall = F,show.all = F,max.ylev = 25,max.xlev = 25) %>%
+  export2md(caption = paste0("Tabla 2.6. Distribución del tipo de evento por territorio estratificado por sexo. Hombres"))
+
+
+descrTable(cod_terr~cod_tipo,data=dt_temp %>% filter(sexe=="D"),show.p.overall = F,show.all = F,max.ylev = 25,max.xlev = 25) %>%
+  export2md(caption = paste0("Tabla 2.7. Distribución del tipo de evento por territorio estratificado por sexo. Mujeres"))
 
 
 ```
 
-## Tablas antiguas
-### Distribución de eventos por tipo y territorio (Multiterritorio)
+
+# 5. Descriptiva de fallecidos 
+
+
+## 5.1. Descriptivo de eventos por tipo y territorio en función de exitus CV
+
+- Eventos CV (N=`r as.numeric(count(dades))`)
 
 ```{r}
 
-formu<-formula.text("tabla_territorio","edat_grup2",taulavariables = conductor_variables)
-descrTable(formu,dades,show.p.overall = F,show.all = T,hide= "No")  %>% 
-  export2md(caption = paste0("Tabla 2: Distribución del territorio del evento por grupos de edad"))
+dt_temp<-dades
 
+## Per territori
 
-formu<-formula.text("tabla_territorio","sexe",taulavariables = conductor_variables)
-descrTable(formu,dades,show.p.overall = F,show.all = T,hide= "No")  %>% 
-  export2md(caption = paste0("Tabla 2.2: Distribución del territorio del evento por sexo"))
+formu<-formula.text("tabla_territorio",y="exitus_first_CV",taulavariables = conductor_variables)
+descrTable(formu,
+           dt_temp,
+           max.ylev=20,max.xlev=20, show.p.overall = F,hide="No",
+           include.miss = T,show.all = T) %>% export2md()
 
+## Per tipus 
 
-formu<-formula.text("tabla_territorio","edat_grup2",taulavariables = conductor_variables)
-descrTable(formu,dades,show.p.overall = F,show.all = T,hide= "No",subset = (sexe=="D"))  %>% 
-  export2md(caption = paste0("Tabla 2.3: Distribución del territorio del evento Mujeres"))
+formu<-formula.text("event_tipo",y="exitus_first_CV",taulavariables = conductor_variables)
+descrTable(formu,
+           dt_temp,
+           max.ylev=20,max.xlev=20, show.p.overall = F,hide="No",
+           include.miss = T,show.all = T) %>% export2md()
 
-formu<-formula.text("tabla_territorio","edat_grup2",taulavariables = conductor_variables)
-descrTable(formu,dades,show.p.overall = F,show.all = T,hide= "No",subset = (sexe=="H"))  %>% 
-  export2md(caption = paste0("Tabla 2.4: Distribución del territorio del evento Hombres"))
-
-
-# Per tipus de territori (Canvi de denominador)
-
-formu<-formula.text("tab_coro","edat_grup2",taulavariables = conductor_variables)
-descrTable(formu,dades,show.p.overall = F,show.all = T,hide= "No",subset = (EV.TER.Coronario=="Yes") )  %>% 
-  export2md(caption = paste0("Tabla 3: Distribución del tipo de evento coronario por grupos de edad"))
-
-
-formu<-formula.text("tab_AVC","edat_grup2",taulavariables = conductor_variables)
-descrTable(formu,dades,show.p.overall = F,show.all = T,hide= "No",subset = (EV.TER.AVC=="Yes"))  %>% 
-  export2md(caption = paste0("Tabla 4: Distribución del territorio del del evento por grupos de edad"))
-
-formu<-formula.text("tab_peri","edat_grup2",taulavariables = conductor_variables)
-descrTable(formu,dades,show.p.overall = F,show.all = T,hide= "No",subset = (EV.TER.Periferico=="Yes"))  %>% 
-  export2md(caption = paste0("Tabla 5: Distribución del territorio del del evento por grupos de edad"))
 
 
 ```
+
+
+## 5.2. Caracteristicas de edad y sexo en función de exitus (CV o no)
+
+- Población total (N=`r as.numeric(count(dades_pob))`)
+
+- Exitus Con y sin evento CV previo (n=`r sum(dades_pob$exitus=="Yes")`)
+
+
+Nota: Se compara la situación basal (2010) en cuanto a edad, de los que fallecen durante el seguimiento versus los que no. 
+
+
+```{r}
+dt_temp<-dades_pob
+
+
+# Descriptiu exitus vs no exitus
+taula_exitus<-descrTable(exitus~edat_grup2+edat+sexe,data=dt_temp, show.p.overall = FALSE)
+taula_exitus %>% export2md(caption = "Distribución por edad y sexo de los fallecidos versus los no fallecidos durante el estudio")
+
+strataTable(taula_exitus, "sexe") %>%  export2md(caption = "Distribución por edad y sexo de los fallecidos versus los no fallecidos durante el estudio stratificado por sexo ")
+
+
+```
+
+## 5.3. Comparativa de fallecidos por **causa CV** conocida versus los fallecidos **sin causa conocida** por grupos de edad y sexo
+
+Exitus por cualquier causa (N= `r as.numeric(count(dades_pob %>% filter(exitus=="Yes"))) `)
+
+
+
+```{r}
+
+
+dt_temp<-dades_pob %>% filter(exitus=="Yes")
+
+# Descriptiva de exitus
+taula_exitus<-descrTable(event~edat_grup2+edat+sexe,data=dt_temp, show.p.overall = FALSE,show.all = T)
+
+taula_exitus %>% export2md(caption = "Características de los **fallecidos** con y sin ECV durante seguimiento")
+
+# Strata por 
+strataTable(taula_exitus, "sexe") %>% export2md(caption = "Características de los **fallecidos** con y sin ECV durante seguimiento estratificado por sexo")
+
+
+
+
+
+```
+
+
 

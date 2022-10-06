@@ -2,7 +2,7 @@
 title: "Epidemiology of first cardiovascular event"
 author: "Jordi Real"
 params:
-  mostra: yes
+  mostra: TRUE
 ---
 
 # Funcions / Llibreries 
@@ -32,22 +32,44 @@ fitxer_conductor_variables<-here::here("variables_precav.xls")
 CATALEG<-readxl::read_excel(fitxer_conductor_cataleg,col_types = "text") %>% distinct()
 
 # Llegeixo les funcions de lectura de dades
-source(here::here("sintaxis","global_lectura.R"))
+source(here::here("codi","global_lectura.R"))
 funcions_lectura_dades(mostra=params$mostra)  # Lect
+
+
+evaluar<-(params$mostra=="TRUE")
+
 
 ```
 
 # Lectura
 
 ```{r}
-
 #  Llegir PACIENTS, I PROBLEMES DE SALUT
 PACIENTS<-Inf %>% LLEGIR.PACIENTS()
 PROBLEMES<-Nmostra %>% LLEGIR.PROBLEMES()
 CMBDH<-Nmostra %>% LLEGIR.CMBDH()
 CMBDH.padris<-Nmostra %>% LLEGIR.padris()
 CMBDH_PROC<-Nmostra %>% LLEGIR.PROC()
+```
 
+
+```{r Mostra_vs-Poblacio, eval=FALSE}
+
+# Verificació mostra versus poblacio
+
+funcions_lectura_dades(F)  # Lect
+PACIENTS<-Inf %>% LLEGIR.PACIENTS()
+PACIENTS %>% group_by(situacio) %>% count() %>% mutate(perc=(n/nrow(PACIENTS))*100)
+PACIENTS %>% group_by(sexe) %>% count() %>% mutate(perc=(n/nrow(PACIENTS))*100)
+PACIENTS %>% group_by(sexe) %>% summarise(mean(dnaix)) 
+PACIENTS %>% group_by(rural) %>% count() %>% mutate(perc=(n/nrow(PACIENTS))*100)
+
+funcions_lectura_dades(T)  # Lect
+PACIENTS<-Inf %>% LLEGIR.PACIENTS()
+PACIENTS %>% group_by(situacio) %>% count() %>% mutate(perc=(n/nrow(PACIENTS))*100)
+PACIENTS %>% group_by(sexe) %>% count() %>% mutate(perc=(n/nrow(PACIENTS))*100)
+PACIENTS %>% group_by(sexe) %>% summarise(mean(dnaix)) 
+PACIENTS %>% group_by(rural) %>% count() %>% mutate(perc=(n/nrow(PACIENTS))*100)
 
 ```
 
@@ -69,7 +91,7 @@ PACIENTS<-PACIENTS %>%
 
 ```
 
-# Fusionar problemes de salut
+# Llegir i fusionar problemes de salut
 
 ```{r}
 
@@ -103,15 +125,48 @@ rm(CMBDH.padris)
 
 ```
 
+# Integrar dades del INE en problemes de salut
 
-# Identificar Events  
+```{r lectura_INE, eval=evaluar}
 
-```{r}
-# Agrego problemes amb límit data máxima (31/12/2016) O sigui dels diagnostics agafo la primera data de cada problema de salut
+# eval=params$mostra
 
-# Selecciono problemes CardioVasculars segons AGR_TER de cataleg 
-temp<-PROBLEMES_total %>% inner_join(CATALEG %>% filter(!is.na(AGR_TER)) %>% select(cod,AGR_TER,EV_TER,AGR2,prior_cim10),by="cod") %>% 
-  mutate(prior_cim10=as.numeric(prior_cim10))
+dt_mortalitat_ine<-
+  data.table::fread(here::here("dades/ine","ECV_CAT_entregable_datos_mortalidad_ine.txt"),colClasses ="character") %>%
+  select(-dexitus) 
+
+# Preparo dades INE Com si fos  historic
+dt_INE<-PACIENTS %>% 
+  select(idp,situacio,sortida) %>%  filter(situacio=="D") %>% 
+  left_join(dt_mortalitat_ine,by="idp") %>% 
+  select(idp,cod=Cexitus,dat=sortida)
+
+# Cataleg
+dt_catalegINE<-readxl::read_excel(here::here("cataleg_precav_emilio.xls"),sheet = "codis_INE",col_types = "text")
+
+# Fusiono Cataleg 
+CATALEG <- CATALEG %>% bind_rows(dt_catalegINE)
+
+# Fusiono problemes de salut AMB codis de causes  INE 
+PROBLEMES_total<-PROBLEMES_total %>% bind_rows(mutate(dt_INE,tipo="Causa_mort_INE"))
+
+# Afegeixo agrupado generic d'exitus
+dt_mortalitat_ine<-
+  dt_mortalitat_ine %>% 
+  left_join(dt_catalegINE %>% select(Cexitus=cod,agr_exitus=agr),
+            by=c("Cexitus"))
+
+```
+
+
+
+# Identificar Events CV  i generació de data index
+
+```{r generacio_dtindex}
+
+
+# Selecciono un unic problema de salut per data segons priorització
+
 
 # ordre de prioritat per territoris en Ecap (CMBD per posicio) 
 # 1. Card Isquémica , 2. ICTUS, 4. Peripheral territory 3. I Cardiaca, (Cualquiera de los códigos)
@@ -123,20 +178,40 @@ temp<-PROBLEMES_total %>% inner_join(CATALEG %>% filter(!is.na(AGR_TER)) %>% sel
 #   - Ins Cardiava: 1. Insuficiencia Cardiaca Congestiva, 2. No Congestiva
 #   - Periferica: 1. ArtPEr , 2. Arterper_C, 3. RVP
 
-temp<-temp %>% mutate(dx_pos=if_else(is.na(dx_pos),prior_cim10,dx_pos))
 
-# I ara selecciono per cada idp-data un unic problema de salut (Aquell que te la posició primaria)
-temp<-temp %>% group_by(idp,dat) %>% slice(which.min(dx_pos)) %>% ungroup()
+PROBLEMES_unics<-
+  PROBLEMES_total %>% 
+  inner_join(CATALEG %>% filter(!is.na(AGR_TER)) %>% select(cod,AGR_TER,EV_TER,AGR2,prior_cim10),by="cod") %>% 
+  mutate(prior_cim10=as.numeric(prior_cim10)) %>% 
+  mutate(dx_pos=if_else(is.na(dx_pos),prior_cim10,dx_pos)) %>% 
+  group_by(idp,dat) %>% slice(which.min(dx_pos)) %>% ungroup()
 
-#### Fusiono agregador (+agr) 
-dates_casos<-temp %>% 
-  agregar_problemes_agr(bd.dindex="20161231",agregador =AGR_CAS,dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),prefix="",camp_agregador="AGR_TER") %>% select(idp,dtevent=AGR_CAS,codindex=cod)
 
-CATALEG %>% select(cod,tipo,AGR_TER) %>% filter(!is.na(AGR_TER)) %>% kable(caption="Codigos CIE9/CIE10: considerados como eventos CV") %>% kableExtra::kable_styling()
+# Generacio data index
+dates_casos<-
+  PROBLEMES_unics %>% 
+  agregar_problemes_agr(bd.dindex="20100101",
+                        agregador="ECV_TER",
+                        dt.agregadors=CATALEG,
+                        finestra.dies=c(-Inf,+Inf),
+                        prefix="",
+                        camp_agregador="AGR_TER") %>% 
+  select(idp,dtevent=AGR_CAS,codindex=cod)
+
+# Fitxer dataindex 
+data0_cohort<-"20100101"
+
+bdades_index<-dates_casos %>% 
+  filter(dtevent>data0_cohort) %>% 
+  select(idp,dtindex=dtevent) 
+
+
+CATALEG %>% select(cod,tipo,AGR_TER) %>% 
+  filter(!is.na(AGR_TER)) %>% 
+  kable(caption="Codigos CIE9/CIE10: considerados como eventos CV") %>% kableExtra::kable_styling()
 
 
 # Fusionar tipo i territori
-
 # Identificar unics
 temp_cataleg<-CATALEG %>% filter(!is.na(AGR_TER)) %>% select(cod,EV_TER,AGR2) %>% distinct()
 
@@ -146,276 +221,124 @@ dates_casos<-
   transmute(idp,dtevent,codindex,cod_terr=EV_TER,cod_tipo=AGR2)
 
 
-
 ```
 
-# Afegeixo a Cohort (PACIENTS) data d'event
-
-
-```{r}
-
-PACIENTS<-PACIENTS %>% 
-  dplyr::left_join(dates_casos, by="idp") %>% 
-  as_tibble()
-
-
-```
-
-# Criteri d'exclusió 2 antecedent CV a 2010
-
-```{r}
-
-# Considero data0 d'inici cohort 2010/01/01
-data0_cohort<-20100101
-
-PACIENTS<-PACIENTS %>% 
-  mutate (ANT.event=ifelse(dtevent<=data0_cohort,1,0)) %>% 
-  mutate (ANT.event=ifelse(is.na(dtevent), 0, ANT.event)) %>% 
-  mutate (event=ifelse(dtevent>data0_cohort,1,0)) %>% 
-  mutate (event=ifelse(is.na(dtevent),0, event)) 
-
-
-# Mini descriptiva
-PACIENTS %>% group_by(ANT.event) %>% count() %>% kable(caption = "Criteri d'exclusió 2 antecedent CV a 2010") 
-
-
-```
-
-
-# Criteri d'exclusió 3 antecedent de DM1 o Fibrilació auricular (previ a 2010?)----
-
-```{r}
-
-data0_cohort<-"20100101"
-
-DM1_dt<-agregar_problemes_agr(dt=PROBLEMES_total,agregador = "E10",camp_agregador = "agr",bd.dindex = data0_cohort,dt.agregadors = CATALEG,finestra.dies=c(-Inf,0))
-FA_dt<-agregar_problemes_agr(dt=PROBLEMES_total,agregador = "FA",camp_agregador = "agr",bd.dindex = data0_cohort,dt.agregadors = CATALEG,finestra.dies=c(-Inf,0))
-
-DM1_dt %>% count() %>% kable(caption="Pacients amb DM1 previ 2010")
-DM1_dt %>% group_by(cod) %>% count() %>% kable(caption="Pacients amb DM1 previ 2010")
-
-FA_dt %>% count() %>% kable(caption="Pacients amb FA previ 2010")
-FA_dt %>% group_by(cod) %>% count() %>% kable(caption="Pacients amb FA previ 2010")
-
-
-PACIENTS<-PACIENTS %>% left_join(DM1_dt %>% transmute(idp,ANT.DM1=1),by="idp")
-PACIENTS<-PACIENTS %>% left_join(FA_dt %>% transmute(idp,ANT.FA=1),by="idp")
-
-
-
-```
-
-# Població elegible (descriptiva)
-
-```{r}
-
-descrTable(PACIENTS,method = 3)
-
-descrTable(PACIENTS,method = 2, Q1=0,Q3=1)
-
-
-```
 
 
 # Agregar només events i tipos de events en data d'event
-
-```{r}
-bdades_index=PACIENTS %>% filter(event==1) %>% select(idp,event,dtindex=dtevent)
-
-# 6. Agregar variables en data index -----------------------
-
-# Data index 
-
-# Canvi de diseny: ara dataindex per20100101
-
-#     6.2.1 Agregar Problemes (ECV Manel) ----------------
-problemesDG2_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex =bdades_index,dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),camp_agregador="AGR2",prefix = "EV.TIP.")
-
-#     6.2.2 Agregar Problemes (Events Principals) ----------------
-problemesEVPR_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex =bdades_index,dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),camp_agregador="AGR_PR",prefix = "EV.")
-
-#     6.2.3 Agregar Problemes (Events Ampliats) --------------------
-problemesEVAM_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex =bdades_index,dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),camp_agregador="AGR_AMP",prefix = "EV.")
-
-#     6.2.4 Agregar Problemes (Events Secundaris) -----------------
-problemesEVSC_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex =bdades_index,dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),camp_agregador="AGR_SEC",prefix = "EV.")
-
-#     6.2.5 Agregar Problemes (Events Territorios) -----------------
-problemesEVTR_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex =bdades_index,dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),camp_agregador="EV_TER",prefix = "EV.TER.")
-
-
-```
 
 # Agregar problemes de salut en data d'inici de cohort (20100101)
 
 > Comorbiditat en data inici de cohort 
 
-```{r}
-
-#     6.2. Agregar Problemes(Agrupadors antics) ----------------
-problemes_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex = "20100101",dt.agregadors=CATALEG,finestra.dies=c(-Inf,0))
-
-
-#     6.2.6 Agregar Problemes (ATEROSCLEROSIS) -----------------
-problemesATERO_bd<-agregar_problemes(dt=PROBLEMES_total,bd.dindex = "20100101",dt.agregadors=CATALEG,finestra.dies=c(-Inf,0),camp_agregador="ATEROSCLEROSI",prefix = "DG.")
-
-
-
-```
-
-# Fusionar tots els problemes de Salut per alliberar memoria
-
-- Segons bdades_index
-- Només en events
-
-```{r}
-
-BDTOTAL<-bdades_index %>%
-  left_join(select(problemes_bd,-dtindex), by=c("idp")) %>% 
-  left_join(select(problemesDG2_bd,-dtindex), by=c("idp")) %>% 
-  left_join(select(problemesEVPR_bd,-dtindex), by=c("idp")) %>% 
-  left_join(select(problemesEVAM_bd,-dtindex), by=c("idp")) %>% 
-  left_join(select(problemesEVSC_bd,-dtindex), by=c("idp")) %>% 
-  left_join(select(problemesEVTR_bd,-dtindex), by=c("idp")) %>% 
-  left_join(select(problemesATERO_bd,-dtindex), by=c("idp"))
-
-gc()
-
-descrTable(BDTOTAL,method = 2, Q1=0,Q3=1)
-
-
-```
-
-# Fusionar tots els problemes de Salut a POBLACIÓ 
-
-- Ara fer el mateix a base de dades POBLACIONAL
-
-```{r}
-
-PACIENTS<-PACIENTS %>%
-  left_join(select(problemes_bd,-dtindex), by=c("idp")) %>% 
-  left_join(select(problemesDG2_bd,-dtindex), by=c("idp")) %>% 
-  left_join(select(problemesEVPR_bd,-dtindex), by=c("idp")) %>% 
-  left_join(select(problemesEVAM_bd,-dtindex), by=c("idp")) %>% 
-  left_join(select(problemesEVSC_bd,-dtindex), by=c("idp")) %>% 
-  left_join(select(problemesEVTR_bd,-dtindex), by=c("idp")) %>% 
-  left_join(select(problemesATERO_bd,-dtindex), by=c("idp"))
-
-
-
-```
 
 
 # Agregar visites (Any anterior) 
 
-```{r}
+```{r, eval=TRUE}
 #     6.1. Agregar visites (Any anterior) -------------
-VISITES<-Nmostra %>% LLEGIR.VISITES() 
+VISITES<-
+  Nmostra %>% LLEGIR.VISITES() %>% semi_join(PACIENTS,by="idp") %>% 
+  mutate(val=1)
 
-visites_bd<-agregar_visites(dt=VISITES,bd.dindex = "20100101",finestra.dies=c(-365,-45)) %>% select(-dtindex)
-rm(VISITES)
 
 
 ```
 
-# Agregar variables
+
+
+
+
+# Llegir variables
 
 ```{r}
-# 6.4. Agregar Variables ---------------
-VARIABLES<-Nmostra %>% LLEGIR.VARIABLES %>% select(idp,cod,val,dat) 
-variables_bd<-agregar_analitiques(dt=VARIABLES,bd.dindex = "20100101",finestra.dies=c(-365,0)) %>% select(-dtindex)
+# 6.4. Agregar Variables -------------------
+VARIABLES<-Nmostra %>% LLEGIR.VARIABLES %>% select(idp,cod,val,dat) %>% semi_join(PACIENTS,by="idp")
 
 #     6.5. Agregar Cliniques ---------------
 CLINIQUES<-Nmostra %>% LLEGIR.CLINIQUES %>% select(idp,cod=agr,val,dat) 
-cliniques_bd<-agregar_analitiques(dt=CLINIQUES,bd.dindex = "20100101",finestra.dies=c(-365,0)) %>% select(-dtindex)
 
-#     6.6.1 Agregar TABAC ---------------------------
-TABAC<-Nmostra %>% LLEGIR.TABAC %>% mutate(cod="tab") 
-tabac_bd<-agregar_analitiques(dt=TABAC,bd.dindex = "20100101",finestra.dies=c(-Inf,0)) %>% select(-dtindex)
+#     6.6.1 Agregar TABAC    ---------------
+TABAC<-Nmostra %>% LLEGIR.TABAC %>% mutate(cod="tab") %>% semi_join(PACIENTS,by="idp")
+
+
 gc()
+
+
+
 ```
 
-# Agregar farmacs (20100101)
+
+
+
+# Llegir farmacs (20100101)
 
 ```{r}
 #     6.7. Agregar Farmacs Facturació en data / 1 any previ---------------------------
-FX.FACTURATS<-Nmostra %>% LLEGIR.FX.FACTURATS 
+FX.FACTURATS<-Nmostra %>% LLEGIR.FX.FACTURATS %>% semi_join(PACIENTS,by="idp")
 
-farmacs_dispensats<-agregar_facturacio(dt=FX.FACTURATS,prefix = "FD.",bd.dindex = "20100101",finestra.dies=c(-365,-45),dt.agregadors=CATALEG) %>% select(-dtindex)
-
-farmacs_dispensats_antiHTA<-agregar_facturacio(dt=FX.FACTURATS,prefix = "FD.",bd.dindex = "20100101",finestra.dies=c(-365,-45),dt.agregadors=CATALEG,camp_agregador="antiHTA") %>% select(-dtindex)
-
-rm(FX.FACTURATS)
-gc()
 
 #     6.8. Agregar Farmacs Prescrits en data/ 365 dies previs ----------------------
-FX.PRESCRITS<-Nmostra %>% LLEGIR.FX.PRESCRITS 
-farmacs_prescrits<-agregar_prescripcions(dt=FX.PRESCRITS,bd.dindex=bdades_index,dt.agregadors=CATALEG,prefix="FP.",finestra.dies = c(-45,-45)) %>% select(-dtindex)
-
-farmacs_prescrits_antiHTA<-agregar_prescripcions(dt=FX.PRESCRITS,bd.dindex=bdades_index,dt.agregadors=CATALEG,prefix="FP.",finestra.dies = c(-45,-45),camp_agregador="antiHTA") %>% select(-dtindex)
-
-rm(FX.PRESCRITS)
-
-```
-
-# Formatejar i unir BDTOTAL  --------------
-
-```{r}
-library(lubridate)
-
-#   7.1. Formatejar dtindex a numeric BDTOTAL --------------
-BDTOTAL <-BDTOTAL %>% mutate (dtindex=as.numeric(ymd(dtindex)))
-
-# variables_bd <- variables_bd %>% mutate (dtindex=as.numeric(dtindex))
-# farmacs_dispensats <- farmacs_dispensats %>% mutate (dtindex=as.numeric(dtindex))
-# farmacs_dispensats_antiHTA <- farmacs_dispensats_antiHTA %>% mutate (dtindex=as.numeric(dtindex))
-# farmacs_prescrits <- farmacs_prescrits %>% mutate (dtindex=as.numeric(dtindex))
-# farmacs_prescrits_antiHTA <- farmacs_prescrits_antiHTA %>% mutate (dtindex=as.numeric(dtindex))
-# visites_bd <- visites_bd %>% mutate (dtindex=as.numeric(ymd(dtindex)))
-
-
-BDTOTAL<- BDTOTAL %>% 
-  left_join(variables_bd, by=c("idp")) %>% 
-  left_join(cliniques_bd, by=c("idp")) %>% 
-  left_join(tabac_bd, by=c("idp")) %>% 
-  left_join(farmacs_dispensats, by=c("idp")) %>% 
-  left_join(farmacs_dispensats_antiHTA, by=c("idp")) %>% 
-  left_join(farmacs_prescrits, by=c("idp")) %>% 
-  left_join(farmacs_prescrits_antiHTA, by=c("idp")) %>% 
-  left_join(visites_bd, by=c("idp")) 
-
-
-# Convert a data 
-BDTOTAL<-BDTOTAL %>% mutate(dtindex=lubridate::as_date(dtindex))
-
-descrTable(BDTOTAL,method=2,Q1=0,Q3=1)
+FX.PRESCRITS<-Nmostra %>% LLEGIR.FX.PRESCRITS %>% semi_join(PACIENTS,by="idp")
 
 
 ```
 
-# Formatejar i unir BDPACIENTS  --------------
+
+# Generar taula plana 
+
+```{r agregar_events, warning=FALSE}
+# Agregar events
+dt_agregada_events<-Generar_taula_plana(bdades_index , 
+                    cataleg = CATALEG,
+                    parametres = here::here("cataleg_precav_emilio.xls"),sheet="parametres_events") %>% 
+  select(-dtindex)
+
+
+
+```
+
+
+```{r agregar_antecedents2010, warning=FALSE}
+
+# Agregar antecedents 2010
+dt_temp<-PACIENTS %>% select(idp)
+
+dt_agregada_2010<-Generar_taula_plana(
+                    dt_temp , 
+                    cataleg = CATALEG,
+                    parametres = here::here("cataleg_precav_emilio.xls"),sheet="parametres_2010") %>% 
+  select(-dtindex)
+
+
+```
+
+
+# Fusionar i unir BDPACIENTS  --------------
 
 ```{r}
 
 #   7.1. Formatejar dtindex a numeric BDTOTAL --------------
 
 PACIENTS<- PACIENTS %>% 
-  left_join(select(bdades_index,-event), by="idp") %>% 
-  left_join(variables_bd, by=c("idp")) %>% 
-  left_join(cliniques_bd, by=c("idp")) %>% 
-  left_join(tabac_bd, by=c("idp")) %>% 
-  left_join(farmacs_dispensats, by=c("idp")) %>% 
-  left_join(farmacs_dispensats_antiHTA, by=c("idp")) %>% 
-  left_join(farmacs_prescrits, by=c("idp")) %>% 
-  left_join(farmacs_prescrits_antiHTA, by=c("idp")) %>% 
-  left_join(visites_bd, by=c("idp")) 
-
-
+  left_join(dates_casos, by="idp") %>% 
+  left_join(dt_agregada_events, by="idp") %>% 
+  left_join(dt_agregada_2010, by="idp") 
+  
 
 # Convert a data 
 
 descrTable(PACIENTS,method=2,Q1=0,Q3=1)
 
+```
+
+
+```{r fusio_dades_INE, eval=evaluar}
+
+# eval=params$mostra
+
+PACIENTS<- PACIENTS %>% 
+  left_join(dt_mortalitat_ine, by=c("idp")) 
 
 
 ```
@@ -426,17 +349,17 @@ descrTable(PACIENTS,method=2,Q1=0,Q3=1)
 
 ```{r}
 
-save(BDTOTAL,PACIENTS,file=here::here("dades/emilio","dt_plana.RData"))
+
+
+# save(BDTOTAL,PACIENTS,file=here::here("dades/emilio","dt_plana.RData"))
+
+if (params$mostra==T) dir<-"dades/emilio/mostra" else dir<-"dades/emilio"
+
+saveRDS(PACIENTS,file=here::here(dir,"dt_plana.RDS"))
+
 
 
 ```
-
-
-
-
-
-
-
 
 
 

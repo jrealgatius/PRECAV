@@ -15,6 +15,10 @@ output:
   pdf_document: default
   word_document: default
 
+params:
+  mostra: yes # no
+
+
 ---
 
 &nbsp;
@@ -31,10 +35,9 @@ output:
 
 
 ```{r setup, include=FALSE}
-# rm(list=ls())
-knitr::opts_chunk$set(echo = FALSE,include=T,warning=F)
+knitr::opts_chunk$set(echo = FALSE,include=T,warning=F,eval = T)
 
-knitr::opts_knit$set(root.dir = normalizePath('../'))
+# knitr::opts_knit$set(root.dir = normalizePath('../'))
 
 # Càrrega de libreries 
 library(compareGroups)
@@ -43,20 +46,31 @@ library(kableExtra)
 library(ggplot2)
 library(plotROC)
 library(purrr)
+library(DiagrammeR)
+
+
+
+# 
+# fitxer<-here::here(dir_Rdata,"output_PRECAV.Rdata")
 
 ```
 
 
 
-```{r import}
 
-load("output/R_data/output_PRECAV_v5.Rdata")
+```{r carregar_dades,include=F,eval=TRUE}
+
+if (params$mostra) {dir_Rdata<-"output/R_data/test"} else {dir_Rdata<-"output/R_data"}
+
+load(here::here(dir_Rdata,"output_PRECAV.Rdata"))
+
 
 
 ```
 
 
-# Análisis exploratario PRELIMINAR (Muestra `r params$filtre`). 
+
+# Análisis exploratario PRELIMINAR
 
 - Muestra inicial de aprox un 8% (N=400000 random) de la base poblacional (N=5 400 000) por motivos computacionales
 - Post aplicación de criterios de inclusión + matching = `r dim(dades)[1]` casos y controles (r=1:4 aproximada)
@@ -176,10 +190,14 @@ Ejemplo 2: Si en un grupo a riesgo X, un individuo caso que se detecta por IAM t
 
 
 ```{r echo=FALSE, warning=FALSE, include=T, size="huge"}
+
 dades_temp<-dades %>% transmute(event,numControls=as.factor(numControls))
-descrTable(event~numControls,data=dades_temp,show.p.overall = F) %>% export2md(caption = "Distribución de número de controles por Caso")
+
+descrTable(event~numControls,data=dades_temp,show.p.overall = F) %>% 
+  export2md(caption = "Distribución de número de controles por Caso")
 
 flow_chart
+
 
 
 ```
@@ -222,7 +240,7 @@ export2md(T2.FARMACS_ACTUALS.joves, caption = caption)
 i<-i+1
 ```
 
-### 1.2. Población Mayor (No prematurs)
+### 1.3. Población Mayor (No prematurs)
 
 ```{r}
 caption <- paste0("Tabla ",i,": Características clínicas en fecha de de detección/registro población mayor")
@@ -236,7 +254,7 @@ i<-i+1
 ```
 
 
-### 1.3. Por grupos de edad y sexo
+### 1.4. Por grupos de edad y sexo
 
 ```{r}
 caption <- paste0("Tabla ",i,":Características clínicas en fecha de de detección/registro población mayor")
